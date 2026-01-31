@@ -676,6 +676,9 @@ multi-agent-shogun/
 ├── config/
 │   └── settings.yaml         # Language and other settings
 │
+├── projects/                # Project details (git-ignored, contains client data)
+│   └── <project_id>.yaml   # Full project info (client, tasks, Notion links, etc.)
+│
 ├── queue/                    # Communication files
 │   ├── shogun_to_karo.yaml   # Commands from Shogun to Karo
 │   ├── tasks/                # Individual worker task files
@@ -687,6 +690,49 @@ multi-agent-shogun/
 ```
 
 </details>
+
+---
+
+## 📂 Project Management
+
+This system manages **all white-collar tasks**, not just its own development. Projects can live anywhere on your filesystem — they don't need to be inside this repository.
+
+### How It Works
+
+```
+config/projects.yaml          # Project registry (ID, name, path, status)
+projects/<project_id>.yaml    # Full project details (client info, tasks, Notion links, etc.)
+```
+
+- **`config/projects.yaml`**: Lists all projects with basic metadata (ID, name, path, status)
+- **`projects/<id>.yaml`**: Contains full details for each project (client info, contract, tasks, related files, Notion pages, etc.)
+- **Project files** (source code, docs, etc.) live at the `path` specified in the project entry — anywhere on the filesystem
+- **`projects/` is git-ignored** because it may contain confidential client information
+
+### Example
+
+```yaml
+# config/projects.yaml
+projects:
+  - id: my_client
+    name: "Client X Consulting"
+    path: "/mnt/c/Consulting/client_x"
+    status: active
+
+# projects/my_client.yaml
+id: my_client
+client:
+  name: "Client X"
+  company: "X Corp"
+contract:
+  fee: "monthly"
+current_tasks:
+  - id: task_001
+    name: "System architecture review"
+    status: in_progress
+```
+
+This separation allows the Shogun system to orchestrate tasks across multiple external projects while keeping project details private and out of version control.
 
 ---
 
@@ -742,6 +788,18 @@ tmux attach-session -t multiagent
 | `Ctrl+B` then `d` | Detach (leave running) |
 | `tmux kill-session -t shogun` | Stop Shogun session |
 | `tmux kill-session -t multiagent` | Stop worker sessions |
+
+### 🖱️ Mouse Support
+
+`first_setup.sh` automatically configures tmux mouse support (`set -g mouse on` in `~/.tmux.conf`). This enables the following mouse operations:
+
+| Action | Description |
+|--------|-------------|
+| Scroll wheel | Scroll within a pane |
+| Click on a pane | Switch focus between panes |
+| Drag pane border | Resize panes |
+
+> **Note:** If you set up tmux manually (without `first_setup.sh`), add `set -g mouse on` to your `~/.tmux.conf` to enable mouse support.
 
 ---
 

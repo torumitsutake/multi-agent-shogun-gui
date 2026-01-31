@@ -677,6 +677,9 @@ multi-agent-shogun/
 ├── config/
 │   └── settings.yaml         # 言語その他の設定
 │
+├── projects/                # プロジェクト詳細（git対象外、機密情報含む）
+│   └── <project_id>.yaml   # 各プロジェクトの全情報（クライアント、タスク、Notion連携等）
+│
 ├── queue/                    # 通信ファイル
 │   ├── shogun_to_karo.yaml   # 将軍から家老へのコマンド
 │   ├── tasks/                # 各ワーカーのタスクファイル
@@ -688,6 +691,49 @@ multi-agent-shogun/
 ```
 
 </details>
+
+---
+
+## 📂 プロジェクト管理
+
+このシステムは自身の開発だけでなく、**全てのホワイトカラー業務**を管理・実行する。プロジェクトのフォルダはこのリポジトリの外にあってもよい。
+
+### 仕組み
+
+```
+config/projects.yaml          # プロジェクト一覧（ID・名前・パス・ステータスのみ）
+projects/<project_id>.yaml    # 各プロジェクトの詳細情報
+```
+
+- **`config/projects.yaml`**: どのプロジェクトがあるかの一覧（サマリのみ）
+- **`projects/<id>.yaml`**: そのプロジェクトの全詳細（クライアント情報、契約、タスク、関連ファイル、Notionページ等）
+- **プロジェクトの実ファイル**（ソースコード、設計書等）は `path` で指定した外部フォルダに配置
+- **`projects/` はGit追跡対象外**（クライアントの機密情報を含むため）
+
+### 例
+
+```yaml
+# config/projects.yaml
+projects:
+  - id: my_client
+    name: "クライアントXコンサルティング"
+    path: "/mnt/c/Consulting/client_x"
+    status: active
+
+# projects/my_client.yaml
+id: my_client
+client:
+  name: "クライアントX"
+  company: "X株式会社"
+contract:
+  fee: "月額"
+current_tasks:
+  - id: task_001
+    name: "システムアーキテクチャレビュー"
+    status: in_progress
+```
+
+この分離設計により、将軍システムは複数の外部プロジェクトを横断的に統率しつつ、プロジェクトの詳細情報はバージョン管理の対象外に保つことができる。
 
 ---
 
@@ -743,6 +789,18 @@ tmux attach-session -t multiagent
 | `Ctrl+B` の後 `d` | デタッチ（実行継続） |
 | `tmux kill-session -t shogun` | 将軍セッションを停止 |
 | `tmux kill-session -t multiagent` | ワーカーセッションを停止 |
+
+### 🖱️ マウス操作
+
+`first_setup.sh` が `~/.tmux.conf` に `set -g mouse on` を自動設定するため、マウスによる直感的な操作が可能です：
+
+| 操作 | 説明 |
+|------|------|
+| マウスホイール | ペイン内のスクロール（出力履歴の確認） |
+| ペインをクリック | ペイン間のフォーカス切替 |
+| ペイン境界をドラッグ | ペインのリサイズ |
+
+キーボード操作に不慣れな場合でも、マウスだけでペインの切替・スクロール・リサイズが行えます。
 
 ---
 

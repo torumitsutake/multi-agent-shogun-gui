@@ -155,9 +155,41 @@ else
 fi
 
 # ============================================================
-# STEP 3: Node.js チェック
+# STEP 3: tmux マウススクロール設定
 # ============================================================
-log_step "STEP 3: Node.js チェック"
+log_step "STEP 3: tmux マウススクロール設定"
+
+TMUX_CONF="$HOME/.tmux.conf"
+TMUX_MOUSE_SETTING="set -g mouse on"
+
+if [ -f "$TMUX_CONF" ] && grep -qF "$TMUX_MOUSE_SETTING" "$TMUX_CONF" 2>/dev/null; then
+    log_info "tmux マウス設定は既に ~/.tmux.conf に存在します"
+else
+    log_info "~/.tmux.conf に '$TMUX_MOUSE_SETTING' を追加中..."
+    echo "" >> "$TMUX_CONF"
+    echo "# マウススクロール有効化 (added by first_setup.sh)" >> "$TMUX_CONF"
+    echo "$TMUX_MOUSE_SETTING" >> "$TMUX_CONF"
+    log_success "tmux マウス設定を追加しました"
+fi
+
+# tmux が起動中の場合は即反映
+if command -v tmux &> /dev/null && tmux list-sessions &> /dev/null; then
+    log_info "tmux が起動中のため、設定を即反映します..."
+    if tmux source-file "$TMUX_CONF" 2>/dev/null; then
+        log_success "tmux 設定を再読み込みしました"
+    else
+        log_warn "tmux 設定の再読み込みに失敗しました（手動で tmux source-file ~/.tmux.conf を実行してください）"
+    fi
+else
+    log_info "tmux は起動していないため、次回起動時に反映されます"
+fi
+
+RESULTS+=("tmux マウス設定: OK")
+
+# ============================================================
+# STEP 4: Node.js チェック
+# ============================================================
+log_step "STEP 4: Node.js チェック"
 
 if command -v node &> /dev/null; then
     NODE_VERSION=$(node -v)
@@ -245,9 +277,9 @@ else
 fi
 
 # ============================================================
-# STEP 4: Claude Code CLI チェック
+# STEP 5: Claude Code CLI チェック
 # ============================================================
-log_step "STEP 4: Claude Code CLI チェック"
+log_step "STEP 5: Claude Code CLI チェック"
 
 if command -v claude &> /dev/null; then
     # バージョン取得を試みる
@@ -294,9 +326,9 @@ else
 fi
 
 # ============================================================
-# STEP 5: ディレクトリ構造作成
+# STEP 6: ディレクトリ構造作成
 # ============================================================
-log_step "STEP 5: ディレクトリ構造作成"
+log_step "STEP 6: ディレクトリ構造作成"
 
 # 必要なディレクトリ一覧
 DIRECTORIES=(
@@ -334,9 +366,9 @@ fi
 RESULTS+=("ディレクトリ構造: OK (作成:$CREATED_COUNT, 既存:$EXISTED_COUNT)")
 
 # ============================================================
-# STEP 6: 設定ファイル初期化
+# STEP 7: 設定ファイル初期化
 # ============================================================
-log_step "STEP 6: 設定ファイル確認"
+log_step "STEP 7: 設定ファイル確認"
 
 # config/settings.yaml
 if [ ! -f "$SCRIPT_DIR/config/settings.yaml" ]; then
@@ -415,9 +447,9 @@ fi
 RESULTS+=("設定ファイル: OK")
 
 # ============================================================
-# STEP 7: 足軽用タスク・レポートファイル初期化
+# STEP 8: 足軽用タスク・レポートファイル初期化
 # ============================================================
-log_step "STEP 7: キューファイル初期化"
+log_step "STEP 8: キューファイル初期化"
 
 # 足軽用タスクファイル作成
 for i in {1..8}; do
@@ -455,9 +487,9 @@ log_info "足軽レポートファイル (1-8) を確認/作成しました"
 RESULTS+=("キューファイル: OK")
 
 # ============================================================
-# STEP 8: スクリプト実行権限付与
+# STEP 9: スクリプト実行権限付与
 # ============================================================
-log_step "STEP 8: 実行権限設定"
+log_step "STEP 9: 実行権限設定"
 
 SCRIPTS=(
     "setup.sh"
@@ -475,9 +507,9 @@ done
 RESULTS+=("実行権限: OK")
 
 # ============================================================
-# STEP 9: bashrc alias設定
+# STEP 10: bashrc alias設定
 # ============================================================
-log_step "STEP 9: alias設定"
+log_step "STEP 10: alias設定"
 
 # alias追加対象ファイル
 BASHRC_FILE="$HOME/.bashrc"
@@ -542,9 +574,9 @@ fi
 RESULTS+=("alias設定: OK")
 
 # ============================================================
-# STEP 10: Memory MCP セットアップ
+# STEP 11: Memory MCP セットアップ
 # ============================================================
-log_step "STEP 10: Memory MCP セットアップ"
+log_step "STEP 11: Memory MCP セットアップ"
 
 if command -v claude &> /dev/null; then
     # Memory MCP が既に設定済みか確認

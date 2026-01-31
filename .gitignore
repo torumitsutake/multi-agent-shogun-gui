@@ -3,6 +3,7 @@ claude-shogun-orders.md
 
 # Claude Code settings
 .claude/
+.mcp.json
 
 # Test outputs (generated during testing)
 test_output/
@@ -35,3 +36,6 @@ config/projects.yaml
 status/
 config/settings.yaml
 logs/
+
+# Project details (contains client/confidential info)
+projects/

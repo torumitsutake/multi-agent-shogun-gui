@@ -7,6 +7,25 @@
 multi-agent-shogunは、Claude Code + tmux を使ったマルチエージェント並列開発基盤である。
 戦国時代の軍制をモチーフとした階層構造で、複数のプロジェクトを並行管理できる。
 
+## セッション開始時の必須行動（全エージェント必須）
+
+新たなセッションを開始した際（初回起動時）は、作業前に必ず以下を実行せよ。
+※ これはコンパクション復帰とは異なる。セッション開始 = Claude Codeを新規に立ち上げた時の手順である。
+
+1. **Memory MCPを確認せよ**: まず `mcp__memory__read_graph` を実行し、Memory MCPに保存されたルール・コンテキスト・禁止事項を確認せよ。記憶の中に汝の行動を律する掟がある。これを読まずして動くは、刀を持たずに戦場に出るが如し。
+2. **自分の役割に対応する instructions を読め**:
+   - 将軍 → instructions/shogun.md
+   - 家老 → instructions/karo.md
+   - 足軽 → instructions/ashigaru.md
+3. **instructions に従い、必要なコンテキストファイルを読み込んでから作業を開始せよ**
+
+Memory MCPには、コンパクションを超えて永続化すべきルール・判断基準・殿の好みが保存されている。
+セッション開始時にこれを読むことで、過去の学びを引き継いだ状態で作業に臨める。
+
+> **セッション開始とコンパクション復帰の違い**:
+> - **セッション開始**: Claude Codeの新規起動。白紙の状態からMemory MCPでコンテキストを復元する
+> - **コンパクション復帰**: 同一セッション内でコンテキストが圧縮された後の復帰。summaryが残っているが、正データから再確認が必要
+
 ## コンパクション復帰時（全エージェント必須）
 
 コンパクション後は作業前に必ず以下を実行せよ：
@@ -72,7 +91,8 @@ summaryの「次のステップ」を見てすぐ作業してはならぬ。ま�
 
 ### ファイル構成
 ```
-config/projects.yaml              # プロジェクト一覧
+config/projects.yaml              # プロジェクト一覧（サマリのみ）
+projects/<id>.yaml                # 各プロジェクトの詳細情報
 status/master_status.yaml         # 全体進捗
 queue/shogun_to_karo.yaml         # Shogun → Karo 指示
 queue/tasks/ashigaru{N}.yaml      # Karo → Ashigaru 割当（各足軽専用）
@@ -82,6 +102,21 @@ dashboard.md                      # 人間用ダッシュボード
 
 **注意**: 各足軽には専用のタスクファイル（queue/tasks/ashigaru1.yaml 等）がある。
 これにより、足軽が他の足軽のタスクを誤って実行することを防ぐ。
+
+### プロジェクト管理
+
+shogunシステムは自身の改善だけでなく、**全てのホワイトカラー業務**を管理・実行する。
+プロジェクトの管理フォルダは外部にあってもよい（shogunリポジトリ配下でなくてもOK）。
+
+```
+config/projects.yaml       # どのプロジェクトがあるか（一覧・サマリ）
+projects/<id>.yaml          # 各プロジェクトの詳細（クライアント情報、タスク、Notion連携等）
+```
+
+- `config/projects.yaml`: プロジェクトID・名前・パス・ステータスの一覧のみ
+- `projects/<id>.yaml`: そのプロジェクトの全詳細（クライアント、契約、タスク、関連ファイル等）
+- プロジェクトの実ファイル（ソースコード、設計書等）は `path` で指定した外部フォルダに置く
+- `projects/` フォルダはGit追跡対象外（機密情報を含むため）
 
 ## tmuxセッション構成
 
@@ -169,9 +204,8 @@ MCPツールは遅延ロード方式。使用前に必ず `ToolSearch` で検索
 - "thinking", "Effecting…" 等が表示中なら待機
 
 ### 5. スクリーンショットの場所
-- 殿のスクリーンショット: `{{SCREENSHOT_PATH}}`
+- 殿のスクリーンショット: config/settings.yaml の `screenshot.path` を参照
 - 最新のスクリーンショットを見るよう言われたらここを確認
-- ※ 実際のパスは config/settings.yaml で設定
 
 ### 6. スキル化候補の確認
 - 足軽の報告には `skill_candidate:` が必須

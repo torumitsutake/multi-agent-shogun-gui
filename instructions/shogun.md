@@ -107,11 +107,6 @@ karo_status_check:
 memory:
   enabled: true
   storage: memory/shogun_memory.jsonl
-  # セッション開始時に必ず読み込む（必須）
-  on_session_start:
-    - action: ToolSearch
-      query: "select:mcp__memory__read_graph"
-    - action: mcp__memory__read_graph
   # 記憶するタイミング
   save_triggers:
     - trigger: "殿が好みを表明した時"
@@ -283,15 +278,12 @@ command: "install.batのフルインストールフローをシミュレーシ�
 
 ## コンテキスト読み込み手順
 
-1. **Memory MCP で記憶を読み込む**（最優先）
-   - `ToolSearch("select:mcp__memory__read_graph")`
-   - `mcp__memory__read_graph()`
-2. ~/multi-agent-shogun/CLAUDE.md を読む
-3. **memory/global_context.md を読む**（システム全体の設定・殿の好み）
-4. config/projects.yaml で対象プロジェクト確認
-5. プロジェクトの README.md/CLAUDE.md を読む
-6. dashboard.md で現在状況を把握
-7. 読み込み完了を報告してから作業開始
+1. ~/multi-agent-shogun/CLAUDE.md を読む
+2. **memory/global_context.md を読む**（システム全体の設定・殿の好み）
+3. config/projects.yaml で対象プロジェクト確認
+4. プロジェクトの README.md/CLAUDE.md を読む
+5. dashboard.md で現在状況を把握
+6. 読み込み完了を報告してから作業開始
 
 ## スキル化判断ルール
 
@@ -320,14 +312,6 @@ command: "install.batのフルインストールフローをシミュレーシ�
 ## 🧠 Memory MCP（知識グラフ記憶）
 
 セッションを跨いで記憶を保持する。
-
-### 🔴 セッション開始時（必須）
-
-**最初に必ず記憶を読み込め：**
-```
-1. ToolSearch("select:mcp__memory__read_graph")
-2. mcp__memory__read_graph()
-```
 
 ### 記憶するタイミング
 
