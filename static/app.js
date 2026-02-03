@@ -510,12 +510,13 @@ function initCommandInput() {
         }
     });
 
-    // Enter + Ctrl/Cmd で送信
+    // Enterで送信、Shift+Enterで改行
     textarea.addEventListener('keydown', (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             submitBtn.click();
         }
+        // Shift+Enter はデフォルト動作（改行）を許可
     });
 }
 
