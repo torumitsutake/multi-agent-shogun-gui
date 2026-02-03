@@ -408,4 +408,91 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // モーダルのaria-hidden属性を初期設定（JS動的制御）
     document.getElementById('ashigaru-modal').setAttribute('aria-hidden', 'true');
+
+    // コマンド入力初期化
+    initCommandInput();
 });
+
+// ===== Command Input Functions =====
+
+/**
+ * 将軍への指示を送信
+ */
+async function sendCommand(command) {
+    try {
+        const response = await fetch('/api/command', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ command: command }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to send command:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * フィードバックを表示
+ */
+function showCommandFeedback(message, isSuccess) {
+    const feedback = document.getElementById('command-feedback');
+    feedback.textContent = message;
+    feedback.className = 'command-feedback show ' + (isSuccess ? 'success' : 'error');
+
+    // 5秒後にフィードバックを非表示
+    setTimeout(() => {
+        feedback.classList.remove('show');
+    }, 5000);
+}
+
+/**
+ * コマンド入力を初期化
+ */
+function initCommandInput() {
+    const textarea = document.getElementById('command-text');
+    const submitBtn = document.getElementById('command-submit');
+
+    if (!textarea || !submitBtn) return;
+
+    // 送信ボタンクリック
+    submitBtn.addEventListener('click', async () => {
+        const command = textarea.value.trim();
+        if (!command) {
+            showCommandFeedback('ご命令をお書きください', false);
+            return;
+        }
+
+        // ボタンを無効化
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="button-icon">⏳</span> 送信中...';
+
+        const result = await sendCommand(command);
+
+        // ボタンを復元
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span class="button-icon">⚔</span> 出陣！';
+
+        if (result.success) {
+            showCommandFeedback('ご下命を将軍にお伝えいたしました', true);
+            textarea.value = '';
+        } else {
+            showCommandFeedback(`送信失敗: ${result.error || '不明なエラー'}`, false);
+        }
+    });
+
+    // Enter + Ctrl/Cmd で送信
+    textarea.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            submitBtn.click();
+        }
+    });
+}

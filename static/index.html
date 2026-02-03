@@ -27,6 +27,29 @@
         </div>
     </header>
 
+    <!-- 将軍への指示入力欄 -->
+    <section id="command-input" class="command-section">
+        <div class="command-container">
+            <div class="command-header">
+                <span class="command-icon">📜</span>
+                <h2>上様へのご下命</h2>
+            </div>
+            <div class="command-form">
+                <textarea
+                    id="command-text"
+                    class="command-textarea"
+                    placeholder="ご命令をお書きください..."
+                    rows="2"
+                ></textarea>
+                <button id="command-submit" class="command-button">
+                    <span class="button-icon">⚔</span>
+                    出陣！
+                </button>
+            </div>
+            <div id="command-feedback" class="command-feedback" aria-live="polite"></div>
+        </div>
+    </section>
+
     <main>
         <!-- 要対応 -->
         <section id="action-required" class="panel panel-danger">

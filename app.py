@@ -6,8 +6,14 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse
+from pydantic import BaseModel
 
 from parser import parse_dashboard
+
+
+class CommandRequest(BaseModel):
+    """将軍への指示リクエスト"""
+    command: str
 
 app = FastAPI(title="multi-agent-shogun-gui")
 
@@ -79,6 +85,63 @@ async def get_ashigaru_output(ashigaru_id: str):
             "ashigaru_id": ashigaru_id,
             "pane_index": pane_index,
             "output": result.stdout,
+            "error": None
+        }
+    except subprocess.TimeoutExpired:
+        raise HTTPException(status_code=504, detail="tmux command timed out")
+    except FileNotFoundError:
+        raise HTTPException(status_code=500, detail="tmux not found")
+
+
+@app.post("/api/command")
+async def send_command(request: CommandRequest):
+    """将軍ペインに指示を送信する
+
+    Args:
+        request: CommandRequest with command field
+
+    Returns:
+        送信結果をJSON形式で返す
+    """
+    if not request.command or not request.command.strip():
+        raise HTTPException(status_code=400, detail="Command cannot be empty")
+
+    command = request.command.strip()
+    target = "shogun:0.0"
+
+    try:
+        # メッセージを送信
+        result1 = subprocess.run(
+            ["tmux", "send-keys", "-t", target, command],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        if result1.returncode != 0:
+            return {
+                "success": False,
+                "command": command,
+                "error": f"Failed to send command: {result1.stderr.strip() or 'Unknown error'}"
+            }
+
+        # Enterを送信
+        result2 = subprocess.run(
+            ["tmux", "send-keys", "-t", target, "Enter"],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        if result2.returncode != 0:
+            return {
+                "success": False,
+                "command": command,
+                "error": f"Failed to send Enter: {result2.stderr.strip() or 'Unknown error'}"
+            }
+
+        return {
+            "success": True,
+            "command": command,
+            "target": target,
             "error": None
         }
     except subprocess.TimeoutExpired:
