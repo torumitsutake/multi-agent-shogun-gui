@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a0f">
+    <meta name="description" content="multi-agent-shogun 戦況ダッシュボード">
+    <title>戦況報告 - multi-agent-shogun</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔</text></svg>">
+</head>
+<body>
+    <header>
+        <div class="header-title">
+            <h1>戦況報告</h1>
+        </div>
+        <div class="header-info">
+            <div class="last-updated">
+                最終更新: <span id="last-updated">-</span>
+            </div>
+            <div class="auto-refresh">
+                <label>
+                    <input type="checkbox" id="auto-refresh" checked>
+                    自動更新 (5秒)
+                </label>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- 要対応 -->
+        <section id="action-required" class="panel panel-danger">
+            <h2>🚨 要対応</h2>
+            <div class="content"></div>
+        </section>
+
+        <!-- 進行中 -->
+        <section id="in-progress" class="panel panel-info">
+            <h2>⚔ 進行中</h2>
+            <div class="content"></div>
+        </section>
+
+        <!-- 本日の戦果 -->
+        <section id="completed-today" class="panel panel-success">
+            <h2>🏆 本日の戦果</h2>
+            <div class="content"></div>
+        </section>
+
+        <!-- スキル化候補 -->
+        <section id="skill-candidates" class="panel panel-warning">
+            <h2>🎯 スキル化候補</h2>
+            <div class="content"></div>
+        </section>
+
+        <!-- 生成されたスキル -->
+        <section id="generated-skills" class="panel panel-default">
+            <h2>📜 生成されたスキル</h2>
+            <div class="content"></div>
+        </section>
+
+        <!-- 待機中 -->
+        <section id="waiting" class="panel panel-default">
+            <h2>⏳ 待機中</h2>
+            <div class="content"></div>
+        </section>
+
+        <!-- 伺い事項 -->
+        <section id="inquiries" class="panel panel-default">
+            <h2>❓ 伺い事項</h2>
+            <div class="content"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>multi-agent-shogun-gui v2.0.0 — 戦国AIオーケストレーション</p>
+    </footer>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
