@@ -18,6 +18,35 @@ class CommandRequest(BaseModel):
 app = FastAPI(title="multi-agent-shogun-gui")
 
 
+def filter_pane_output(output: str) -> str:
+    """ペイン出力から不要な行を除外する
+
+    除外対象:
+    - 罫線（─────...で構成される行）
+    - プロンプト行（❯ で始まる行）
+    - 空行の連続（複数の空行は1つに）
+    """
+    lines = output.split('\n')
+    filtered = []
+    prev_empty = False
+    for line in lines:
+        # 罫線をスキップ（5つ以上の─を含む行）
+        if '─' * 5 in line:
+            continue
+        # プロンプト行をスキップ
+        if line.strip().startswith('❯'):
+            continue
+        # 空行の連続を1つに
+        if not line.strip():
+            if prev_empty:
+                continue
+            prev_empty = True
+        else:
+            prev_empty = False
+        filtered.append(line)
+    return '\n'.join(filtered)
+
+
 def get_dashboard_path() -> str:
     """環境変数からダッシュボードパスを取得"""
     return os.environ.get("SHOGUN_DASHBOARD_PATH", "")
@@ -117,7 +146,7 @@ async def get_shogun_output():
 
         return {
             "pane": "shogun",
-            "output": result.stdout,
+            "output": filter_pane_output(result.stdout),
             "error": None
         }
     except subprocess.TimeoutExpired:
