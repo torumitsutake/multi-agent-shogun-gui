@@ -1629,3 +1629,126 @@ footer p::before {
         font-size: 0.9rem;
     }
 }
+
+/* ===== Skill Badge in Action Required ===== */
+.skill-badge-container {
+    margin-bottom: 1.25rem;
+}
+
+.skill-badge-button {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(196, 30, 58, 0.1));
+    border: 2px solid var(--gold);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    animation: skill-badge-pulse 3s ease-in-out infinite;
+}
+
+.skill-badge-button:hover {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(196, 30, 58, 0.15));
+    transform: translateY(-3px);
+    box-shadow: 0 6px 30px var(--glow-gold), 0 0 50px var(--glow-gold);
+}
+
+@keyframes skill-badge-pulse {
+    0%, 100% {
+        box-shadow: 0 4px 20px var(--glow-gold);
+    }
+    50% {
+        box-shadow: 0 4px 30px var(--glow-gold), 0 0 40px var(--glow-gold);
+    }
+}
+
+.skill-badge-icon {
+    font-size: 1.5rem;
+    animation: badge-ring 2s ease-in-out infinite;
+}
+
+@keyframes badge-ring {
+    0%, 100% { transform: rotate(0deg); }
+    10%, 30% { transform: rotate(15deg); }
+    20%, 40% { transform: rotate(-15deg); }
+    50% { transform: rotate(0deg); }
+}
+
+.skill-badge-text {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--gold-light);
+    text-shadow: 0 0 15px var(--glow-gold);
+}
+
+.skill-badge-status {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--crimson);
+    padding: 0.3rem 0.8rem;
+    background: rgba(196, 30, 58, 0.2);
+    border: 1px solid rgba(196, 30, 58, 0.4);
+    border-radius: 20px;
+    margin-left: auto;
+}
+
+/* ===== Skill Modal ===== */
+.skill-modal-container {
+    max-width: 900px;
+    max-height: 85vh;
+}
+
+.skill-modal-content {
+    padding: 0;
+}
+
+#skill-modal .modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    max-height: calc(85vh - 80px);
+}
+
+#skill-modal .skill-candidates-grid {
+    gap: 1rem;
+}
+
+#skill-modal .skill-card-generality {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.6rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    margin-top: 0.5rem;
+}
+
+/* Skill Modal Responsive */
+@media (max-width: 768px) {
+    .skill-badge-button {
+        flex-wrap: wrap;
+        padding: 0.75rem 1rem;
+        gap: 0.5rem;
+    }
+
+    .skill-badge-text {
+        font-size: 1rem;
+    }
+
+    .skill-badge-status {
+        margin-left: 0;
+        margin-top: 0.5rem;
+        width: 100%;
+        text-align: center;
+    }
+
+    .skill-modal-container {
+        width: 95%;
+        max-height: 90vh;
+    }
+}

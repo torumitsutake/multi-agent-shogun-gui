@@ -6,6 +6,7 @@ const API_ENDPOINT = '/api/dashboard';
 const REFRESH_INTERVAL = 5000; // 5秒
 
 let refreshTimer = null;
+let cachedSkillCandidates = []; // スキル候補データをキャッシュ
 
 /**
  * ダッシュボードデータを取得
@@ -24,21 +25,42 @@ async function fetchDashboard() {
 }
 
 /**
- * 要対応セクションを更新
+ * 要対応セクションを更新（スキル候補バッジを含む）
  */
-function renderActionRequired(items) {
+function renderActionRequired(items, skillCandidates) {
     const container = document.querySelector('#action-required .content');
-    if (!items || items.length === 0) {
+
+    // スキル候補バッジを生成
+    const pendingSkills = (skillCandidates || []).filter(s => s.status === '承認待ち');
+    const skillBadgeHtml = pendingSkills.length > 0
+        ? `<div class="skill-badge-container">
+               <button class="skill-badge-button" id="skill-badge-btn">
+                   <span class="skill-badge-icon">🔔</span>
+                   <span class="skill-badge-text">スキル化候補 ${pendingSkills.length}件</span>
+                   <span class="skill-badge-status">【承認待ち】</span>
+               </button>
+           </div>`
+        : '';
+
+    if ((!items || items.length === 0) && pendingSkills.length === 0) {
         container.innerHTML = '<div class="empty">なし</div>';
         return;
     }
 
-    container.innerHTML = items.map(item => `
+    const actionItemsHtml = (items || []).map(item => `
         <div class="action-item">
             <h3>${escapeHtml(item.title)}</h3>
             <p>${escapeHtml(item.content)}</p>
         </div>
     `).join('');
+
+    container.innerHTML = skillBadgeHtml + actionItemsHtml;
+
+    // スキルバッジにクリックイベントを追加
+    const skillBadgeBtn = document.getElementById('skill-badge-btn');
+    if (skillBadgeBtn) {
+        skillBadgeBtn.addEventListener('click', openSkillModal);
+    }
 }
 
 /**
@@ -145,13 +167,25 @@ function renderCompletedToday(items) {
 }
 
 /**
- * スキル化候補セクションを更新（カード形式）
+ * スキル化候補をキャッシュに保存（パネルセクションは非表示に）
  */
 function renderSkillCandidates(items) {
-    const container = document.querySelector('#skill-candidates .content');
+    // データをキャッシュ
+    cachedSkillCandidates = items || [];
+
+    // パネルセクションを非表示に
+    const panel = document.getElementById('skill-candidates');
+    if (panel) {
+        panel.style.display = 'none';
+    }
+}
+
+/**
+ * スキル候補モーダルの内容を生成
+ */
+function renderSkillModalContent(items) {
     if (!items || items.length === 0) {
-        container.innerHTML = '<div class="empty">なし</div>';
-        return;
+        return '<div class="empty">スキル化候補はありません</div>';
     }
 
     const cards = items.map(item => {
@@ -159,6 +193,7 @@ function renderSkillCandidates(items) {
         const isPending = status === '承認待ち';
         const description = item.description || '説明なし';
         const source = item.source || item.discovered_from || '不明';
+        const generality = item.generality || '';
 
         return `
         <div class="skill-candidate-card ${isPending ? 'pending' : ''}">
@@ -171,6 +206,7 @@ function renderSkillCandidates(items) {
                 <p class="skill-card-description">${escapeHtml(description)}</p>
                 <div class="skill-card-meta">
                     <span class="skill-card-source">📍 発見元: ${escapeHtml(source)}</span>
+                    ${generality ? `<span class="skill-card-generality">📊 汎用性: ${escapeHtml(generality)}</span>` : ''}
                 </div>
             </div>
             ${isPending ? `
@@ -182,7 +218,7 @@ function renderSkillCandidates(items) {
         `;
     }).join('');
 
-    container.innerHTML = `<div class="skill-candidates-grid">${cards}</div>`;
+    return `<div class="skill-candidates-grid">${cards}</div>`;
 }
 
 /**
@@ -258,11 +294,13 @@ async function updateDashboard() {
     // 最終更新時刻
     document.getElementById('last-updated').textContent = data.last_updated || '-';
 
-    // 各セクションを更新
-    renderActionRequired(data.action_required);
+    // スキル候補を先にキャッシュ
+    renderSkillCandidates(data.skill_candidates);
+
+    // 各セクションを更新（要対応にはスキル候補バッジを含める）
+    renderActionRequired(data.action_required, data.skill_candidates);
     renderInProgress(data.in_progress);
     renderCompletedToday(data.completed_today);
-    renderSkillCandidates(data.skill_candidates);
     renderGeneratedSkills(data.generated_skills);
     renderWaiting(data.waiting);
     renderInquiries(data.inquiries);
@@ -429,6 +467,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 将軍出力初期化
     initShogunOutput();
+
+    // スキルモーダル初期化
+    initSkillModal();
 });
 
 // ===== Command Input Functions =====
@@ -603,4 +644,51 @@ function initShogunOutput() {
     if (autoRefreshCheckbox.checked) {
         toggleShogunAutoRefresh(true);
     }
+}
+
+// ===== Skill Modal Functions =====
+
+/**
+ * スキルモーダルを開く
+ */
+function openSkillModal() {
+    const modal = document.getElementById('skill-modal');
+    const content = document.getElementById('skill-modal-content');
+
+    // モーダル内容を更新
+    content.innerHTML = renderSkillModalContent(cachedSkillCandidates);
+
+    // モーダルを表示
+    modal.setAttribute('aria-hidden', 'false');
+}
+
+/**
+ * スキルモーダルを閉じる
+ */
+function closeSkillModal() {
+    const modal = document.getElementById('skill-modal');
+    modal.setAttribute('aria-hidden', 'true');
+}
+
+/**
+ * スキルモーダルイベントの初期化
+ */
+function initSkillModal() {
+    const modal = document.getElementById('skill-modal');
+    if (!modal) return;
+
+    // 閉じるボタン・オーバーレイのクリック
+    modal.querySelectorAll('[data-close-skill-modal]').forEach(el => {
+        el.addEventListener('click', closeSkillModal);
+    });
+
+    // ESCキーで閉じる
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.getAttribute('aria-hidden') === 'false') {
+            closeSkillModal();
+        }
+    });
+
+    // aria-hidden を初期設定
+    modal.setAttribute('aria-hidden', 'true');
 }
