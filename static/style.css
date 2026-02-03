@@ -592,3 +592,217 @@ footer p::before {
 :focus:not(:focus-visible) {
     outline: none;
 }
+
+/* ===== Ashigaru Detail Modal ===== */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition-normal), visibility var(--transition-normal);
+}
+
+.modal[aria-hidden="false"] {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+}
+
+.modal-container {
+    position: relative;
+    width: 90%;
+    max-width: 800px;
+    max-height: 80vh;
+    background: var(--bg-card);
+    border: 2px solid var(--gold);
+    border-radius: 12px;
+    box-shadow:
+        0 0 60px var(--glow-gold),
+        0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    transform: scale(0.9) translateY(20px);
+    transition: transform var(--transition-normal);
+    overflow: hidden;
+}
+
+.modal[aria-hidden="false"] .modal-container {
+    transform: scale(1) translateY(0);
+}
+
+/* Modal Header */
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), transparent);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h2 {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    color: var(--gold);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.modal-header h2::before {
+    content: '⚔';
+    font-size: 1.5rem;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: all var(--transition-fast);
+}
+
+.modal-close:hover {
+    color: var(--crimson);
+    background: rgba(196, 30, 58, 0.2);
+}
+
+/* Modal Body */
+.modal-body {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+    min-height: 300px;
+}
+
+/* Terminal Output */
+.terminal-output {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: #a0ffa0;
+    background: #0d0d0d;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin: 0;
+    min-height: 250px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.terminal-output::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.terminal-output::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+.terminal-output::-webkit-scrollbar-thumb {
+    background: var(--gold);
+    border-radius: 3px;
+}
+
+/* Modal Footer */
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 1rem 1.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid var(--border-color);
+}
+
+.btn-refresh {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    padding: 0.5rem 1.25rem;
+    background: linear-gradient(135deg, var(--gold), #b8972e);
+    color: var(--bg-primary);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all var(--transition-fast);
+    box-shadow: 0 2px 10px var(--glow-gold);
+}
+
+.btn-refresh:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px var(--glow-gold);
+}
+
+.btn-refresh:active {
+    transform: translateY(0);
+}
+
+/* ===== Clickable Table Rows (In-Progress) ===== */
+#in-progress tbody tr {
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+#in-progress tbody tr:hover {
+    background: rgba(212, 175, 55, 0.1);
+    transform: translateX(4px);
+}
+
+#in-progress tbody tr:hover td:first-child {
+    color: var(--gold);
+}
+
+/* ===== Modal Loading State ===== */
+.terminal-output.loading {
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ===== Modal Error State ===== */
+.terminal-output.error {
+    color: var(--crimson);
+    border-color: rgba(196, 30, 58, 0.3);
+}
+
+/* ===== Modal Responsive ===== */
+@media (max-width: 768px) {
+    .modal-container {
+        width: 95%;
+        max-height: 90vh;
+    }
+
+    .modal-header h2 {
+        font-size: 1.1rem;
+    }
+
+    .terminal-output {
+        font-size: 0.75rem;
+        min-height: 200px;
+    }
+}

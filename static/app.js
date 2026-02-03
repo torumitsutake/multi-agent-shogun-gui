@@ -42,6 +42,28 @@ function renderActionRequired(items) {
 }
 
 /**
+ * 足軽名からashigaru IDを抽出
+ * 例: "足軽1" -> "ashigaru1", "ashigaru3" -> "ashigaru3"
+ */
+function extractAshigaruId(workerName) {
+    if (!workerName) return null;
+
+    // 既にashigaru形式の場合
+    const englishMatch = workerName.match(/ashigaru(\d+)/i);
+    if (englishMatch) {
+        return `ashigaru${englishMatch[1]}`;
+    }
+
+    // 日本語「足軽N」形式の場合
+    const japaneseMatch = workerName.match(/足軽(\d+)/);
+    if (japaneseMatch) {
+        return `ashigaru${japaneseMatch[1]}`;
+    }
+
+    return null;
+}
+
+/**
  * 進行中セクションを更新
  */
 function renderInProgress(items) {
@@ -62,18 +84,25 @@ function renderInProgress(items) {
                 </tr>
             </thead>
             <tbody>
-                ${items.map(item => `
-                    <tr>
-                        <td>${escapeHtml(item['足軽'] || item.worker || '-')}</td>
+                ${items.map(item => {
+                    const workerName = item['足軽'] || item.worker || '-';
+                    const ashigaruId = extractAshigaruId(workerName);
+                    const dataAttr = ashigaruId ? `data-ashigaru-id="${ashigaruId}"` : '';
+                    return `
+                    <tr ${dataAttr} title="${ashigaruId ? 'クリックで詳細表示' : ''}">
+                        <td>${escapeHtml(workerName)}</td>
                         <td>${escapeHtml(item['タスク'] || item.task || '-')}</td>
                         <td>${escapeHtml(item['戦場'] || item.project || '-')}</td>
                         <td><span class="badge badge-busy">${escapeHtml(item['状態'] || item.status || '-')}</span></td>
                     </tr>
-                `).join('')}
+                `}).join('')}
             </tbody>
         </table>
     `;
     container.innerHTML = table;
+
+    // クリックイベントを追加
+    attachInProgressClickHandlers();
 }
 
 /**
@@ -226,6 +255,124 @@ function toggleAutoRefresh(enabled) {
     }
 }
 
+// ===== Modal Functions =====
+
+let currentAshigaruId = null;
+
+/**
+ * モーダルを開く
+ */
+function openModal(ashigaruId) {
+    currentAshigaruId = ashigaruId;
+    const modal = document.getElementById('ashigaru-modal');
+    const title = document.getElementById('modal-title');
+    const output = document.getElementById('modal-output');
+
+    // タイトルを設定
+    const ashigaruNum = ashigaruId.replace('ashigaru', '');
+    title.textContent = `足軽${ashigaruNum} 進行状況`;
+
+    // ローディング状態
+    output.textContent = '読込中...';
+    output.classList.add('loading');
+    output.classList.remove('error');
+
+    // モーダルを表示
+    modal.setAttribute('aria-hidden', 'false');
+
+    // 足軽出力を取得
+    fetchAshigaruOutput(ashigaruId);
+}
+
+/**
+ * モーダルを閉じる
+ */
+function closeModal() {
+    const modal = document.getElementById('ashigaru-modal');
+    modal.setAttribute('aria-hidden', 'true');
+    currentAshigaruId = null;
+}
+
+/**
+ * 足軽ペインの出力を取得
+ */
+async function fetchAshigaruOutput(ashigaruId) {
+    const output = document.getElementById('modal-output');
+
+    try {
+        const response = await fetch(`/api/ashigaru/${ashigaruId}/output`);
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        output.classList.remove('loading');
+
+        if (data.error) {
+            output.textContent = `エラー: ${data.error}`;
+            output.classList.add('error');
+        } else if (!data.output || data.output.trim() === '') {
+            output.textContent = '（出力なし）';
+        } else {
+            output.textContent = data.output;
+            output.classList.remove('error');
+            // 最下部にスクロール
+            output.scrollTop = output.scrollHeight;
+        }
+    } catch (error) {
+        console.error('Failed to fetch ashigaru output:', error);
+        output.classList.remove('loading');
+        output.classList.add('error');
+        output.textContent = `取得失敗: ${error.message}`;
+    }
+}
+
+/**
+ * 進行中テーブルにクリックイベントを追加
+ */
+function attachInProgressClickHandlers() {
+    const rows = document.querySelectorAll('#in-progress tbody tr[data-ashigaru-id]');
+    rows.forEach(row => {
+        row.addEventListener('click', () => {
+            const ashigaruId = row.getAttribute('data-ashigaru-id');
+            if (ashigaruId) {
+                openModal(ashigaruId);
+            }
+        });
+    });
+}
+
+/**
+ * モーダルイベントの初期化
+ */
+function initModalEvents() {
+    const modal = document.getElementById('ashigaru-modal');
+
+    // 閉じるボタン・オーバーレイのクリック
+    modal.querySelectorAll('[data-close-modal]').forEach(el => {
+        el.addEventListener('click', closeModal);
+    });
+
+    // ESCキーで閉じる
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.getAttribute('aria-hidden') === 'false') {
+            closeModal();
+        }
+    });
+
+    // 更新ボタン
+    document.getElementById('modal-refresh').addEventListener('click', () => {
+        if (currentAshigaruId) {
+            const output = document.getElementById('modal-output');
+            output.textContent = '更新中...';
+            output.classList.add('loading');
+            output.classList.remove('error');
+            fetchAshigaruOutput(currentAshigaruId);
+        }
+    });
+}
+
 /**
  * 初期化
  */
@@ -243,4 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (autoRefreshCheckbox.checked) {
         toggleAutoRefresh(true);
     }
+
+    // モーダルイベント初期化
+    initModalEvents();
 });

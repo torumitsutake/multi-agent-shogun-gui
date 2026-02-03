@@ -1,9 +1,10 @@
 """multi-agent-shogun-gui: Webダッシュボード"""
 import argparse
 import os
+import subprocess
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse
 
 from parser import parse_dashboard
@@ -33,6 +34,57 @@ async def get_dashboard():
     if not dashboard_path:
         return {"error": "Dashboard path not configured. Set SHOGUN_DASHBOARD_PATH environment variable."}
     return parse_dashboard(dashboard_path)
+
+
+@app.get("/api/ashigaru/{ashigaru_id}/output")
+async def get_ashigaru_output(ashigaru_id: str):
+    """足軽ペインの最新出力を取得する
+
+    Args:
+        ashigaru_id: 足軽ID (例: "ashigaru1", "ashigaru2", ...)
+
+    Returns:
+        足軽ペインの最新50行の出力をJSON形式で返す
+    """
+    # ashigaru_id からペインインデックスを算出
+    # ashigaru1 -> pane 1, ashigaru2 -> pane 2, ...
+    if not ashigaru_id.startswith("ashigaru"):
+        raise HTTPException(status_code=400, detail="Invalid ashigaru_id format")
+
+    try:
+        pane_index = int(ashigaru_id.replace("ashigaru", ""))
+        if pane_index < 1 or pane_index > 8:
+            raise HTTPException(status_code=400, detail="ashigaru_id must be between 1 and 8")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid ashigaru_id format")
+
+    # tmux capture-pane で出力を取得
+    target = f"multiagent:agents.{pane_index}"
+    try:
+        result = subprocess.run(
+            ["tmux", "capture-pane", "-t", target, "-p", "-S", "-50"],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        if result.returncode != 0:
+            return {
+                "ashigaru_id": ashigaru_id,
+                "pane_index": pane_index,
+                "output": "",
+                "error": f"Failed to capture pane: {result.stderr.strip() or 'Pane not found'}"
+            }
+
+        return {
+            "ashigaru_id": ashigaru_id,
+            "pane_index": pane_index,
+            "output": result.stdout,
+            "error": None
+        }
+    except subprocess.TimeoutExpired:
+        raise HTTPException(status_code=504, detail="tmux command timed out")
+    except FileNotFoundError:
+        raise HTTPException(status_code=500, detail="tmux not found")
 
 
 @app.get("/static/{path:path}")

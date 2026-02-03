@@ -71,6 +71,23 @@
         </section>
     </main>
 
+    <!-- 足軽詳細モーダル -->
+    <div id="ashigaru-modal" class="modal" aria-hidden="true">
+        <div class="modal-overlay" data-close-modal></div>
+        <div class="modal-container">
+            <header class="modal-header">
+                <h2 id="modal-title">足軽1 進行状況</h2>
+                <button class="modal-close" data-close-modal aria-label="閉じる">&times;</button>
+            </header>
+            <div class="modal-body">
+                <pre id="modal-output" class="terminal-output">読込中...</pre>
+            </div>
+            <footer class="modal-footer">
+                <button id="modal-refresh" class="btn-refresh">更新</button>
+            </footer>
+        </div>
+    </div>
+
     <footer>
         <p>multi-agent-shogun-gui v2.0.0 — 戦国AIオーケストレーション</p>
     </footer>
