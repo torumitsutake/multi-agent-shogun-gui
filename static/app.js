@@ -145,7 +145,7 @@ function renderCompletedToday(items) {
 }
 
 /**
- * スキル化候補セクションを更新（テーブル形式）
+ * スキル化候補セクションを更新（カード形式）
  */
 function renderSkillCandidates(items) {
     const container = document.querySelector('#skill-candidates .content');
@@ -154,39 +154,35 @@ function renderSkillCandidates(items) {
         return;
     }
 
-    const table = `
-        <table class="skill-candidates-table">
-            <thead>
-                <tr>
-                    <th class="col-name">スキル名</th>
-                    <th class="col-description">説明</th>
-                    <th class="col-source">発見元</th>
-                    <th class="col-status">状態</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${items.map((item, index) => {
-                    const status = item.status || '承認待ち';
-                    const statusClass = status === '承認待ち' ? 'badge-pending' : 'badge-info';
-                    const description = item.description || '-';
-                    const source = item.source || item.discovered_from || '-';
-                    const rowClass = index % 2 === 0 ? 'row-even' : 'row-odd';
-                    return `
-                    <tr class="${rowClass}">
-                        <td class="col-name">
-                            <span class="skill-name">${escapeHtml(item.name)}</span>
-                        </td>
-                        <td class="col-description">${escapeHtml(description)}</td>
-                        <td class="col-source">${escapeHtml(source)}</td>
-                        <td class="col-status">
-                            <span class="${statusClass}">${escapeHtml(status)}</span>
-                        </td>
-                    </tr>
-                `}).join('')}
-            </tbody>
-        </table>
-    `;
-    container.innerHTML = table;
+    const cards = items.map(item => {
+        const status = item.status || '承認待ち';
+        const isPending = status === '承認待ち';
+        const description = item.description || '説明なし';
+        const source = item.source || item.discovered_from || '不明';
+
+        return `
+        <div class="skill-candidate-card ${isPending ? 'pending' : ''}">
+            <div class="skill-card-header">
+                <span class="skill-card-icon">📜</span>
+                <h3 class="skill-card-name">${escapeHtml(item.name)}</h3>
+                ${isPending ? '<span class="skill-pending-badge">🔔 承認待ち</span>' : ''}
+            </div>
+            <div class="skill-card-body">
+                <p class="skill-card-description">${escapeHtml(description)}</p>
+                <div class="skill-card-meta">
+                    <span class="skill-card-source">📍 発見元: ${escapeHtml(source)}</span>
+                </div>
+            </div>
+            ${isPending ? `
+            <div class="skill-card-actions">
+                <span class="skill-action-hint">殿のご裁可をお待ち申し上げます</span>
+            </div>
+            ` : ''}
+        </div>
+        `;
+    }).join('');
+
+    container.innerHTML = `<div class="skill-candidates-grid">${cards}</div>`;
 }
 
 /**
