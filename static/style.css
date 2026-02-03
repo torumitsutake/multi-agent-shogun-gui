@@ -290,6 +290,8 @@ main {
 }
 
 /* ===== Full Width Panels ===== */
+#action-required,
+#in-progress,
 #completed-today {
     grid-column: 1 / -1;
 }
