@@ -77,23 +77,27 @@ function renderInProgress(items) {
         <table>
             <thead>
                 <tr>
-                    <th>足軽</th>
-                    <th>タスク</th>
+                    <th>担当</th>
+                    <th>任務</th>
                     <th>戦場</th>
                     <th>状態</th>
                 </tr>
             </thead>
             <tbody>
                 ${items.map(item => {
-                    const workerName = item['足軽'] || item.worker || '-';
+                    // APIフィールド名: 担当, プロジェクト, 任務
+                    const workerName = item['担当'] || item['足軽'] || item.worker || '-';
+                    const taskName = item['任務'] || item['タスク'] || item.task || '-';
+                    const projectName = item['プロジェクト'] || item['戦場'] || item.project || '-';
+                    const statusText = item['状態'] || item.status || '戦闘中';
                     const ashigaruId = extractAshigaruId(workerName);
                     const dataAttr = ashigaruId ? `data-ashigaru-id="${ashigaruId}"` : '';
                     return `
                     <tr ${dataAttr} title="${ashigaruId ? 'クリックで詳細表示' : ''}">
                         <td>${escapeHtml(workerName)}</td>
-                        <td>${escapeHtml(item['タスク'] || item.task || '-')}</td>
-                        <td>${escapeHtml(item['戦場'] || item.project || '-')}</td>
-                        <td><span class="badge badge-busy">${escapeHtml(item['状態'] || item.status || '-')}</span></td>
+                        <td>${escapeHtml(taskName)}</td>
+                        <td>${escapeHtml(projectName)}</td>
+                        <td><span class="badge badge-busy">${escapeHtml(statusText)}</span></td>
                     </tr>
                 `}).join('')}
             </tbody>
