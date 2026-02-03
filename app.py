@@ -119,7 +119,7 @@ async def get_ashigaru_output(ashigaru_id: str):
         return {
             "ashigaru_id": ashigaru_id,
             "pane_index": pane_index,
-            "output": result.stdout,
+            "output": filter_pane_output(result.stdout),
             "error": None
         }
     except subprocess.TimeoutExpired:
