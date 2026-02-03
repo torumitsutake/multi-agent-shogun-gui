@@ -4,6 +4,28 @@ from pathlib import Path
 from typing import Any
 
 
+def strip_emoji(text: str) -> str:
+    """文字列先頭の絵文字を除去してテキスト部分のみ返す"""
+    # 先頭の絵文字とスペースを除去（日本語を含まない範囲のみ）
+    # emoji ライブラリを使わず、先頭の非ASCII文字を除去する簡易実装
+    result = text.lstrip()
+    # 先頭が日本語（ひらがな、カタカナ、漢字）またはASCIIでない場合、
+    # 日本語以外の文字をスキップ
+    while result:
+        char = result[0]
+        # 日本語の範囲: ひらがな、カタカナ、漢字、ASCII
+        if (
+            "\u3040" <= char <= "\u309F"  # ひらがな
+            or "\u30A0" <= char <= "\u30FF"  # カタカナ
+            or "\u4E00" <= char <= "\u9FFF"  # 漢字
+            or "\u3400" <= char <= "\u4DBF"  # 漢字拡張A
+            or char.isascii()
+        ):
+            break
+        result = result[1:]
+    return result.strip()
+
+
 def parse_dashboard(filepath: str) -> dict[str, Any]:
     """dashboard.md をパースしてJSONに変換"""
     path = Path(filepath)
@@ -33,20 +55,23 @@ def parse_dashboard(filepath: str) -> dict[str, Any]:
     sections = re.split(r"\n## ", content)
 
     for section in sections:
-        if section.startswith("🚨 要対応"):
+        # セクションの最初の行から絵文字を除去してマッチング
+        first_line = section.split("\n")[0]
+        section_title = strip_emoji(first_line)
+        if section_title.startswith("要対応"):
             result["action_required"] = parse_action_required(section)
-        elif section.startswith("🔄 進行中"):
+        elif section_title.startswith("進行中"):
             result["in_progress"] = parse_table(section)
-        elif section.startswith("✅ 本日の戦果"):
+        elif section_title.startswith("本日の戦果"):
             result["completed_today"] = parse_table(section)
             result["completed_reports"] = parse_completed_reports(section)
-        elif section.startswith("🎯 スキル化候補"):
+        elif section_title.startswith("スキル化候補"):
             result["skill_candidates"] = parse_skill_candidates(section)
-        elif section.startswith("🛠️ 生成されたスキル"):
+        elif section_title.startswith("生成されたスキル"):
             result["generated_skills"] = parse_generated_skills(section)
-        elif section.startswith("⏸️ 待機中"):
+        elif section_title.startswith("待機中"):
             result["waiting"] = parse_simple_list(section)
-        elif section.startswith("❓ 伺い事項"):
+        elif section_title.startswith("伺い事項"):
             result["inquiries"] = parse_simple_list(section)
 
     return result
