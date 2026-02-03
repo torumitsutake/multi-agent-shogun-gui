@@ -542,6 +542,163 @@ td {
     100% { transform: rotate(360deg); }
 }
 
+/* ===== Skill Candidates Table ===== */
+.skill-candidates-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 2px solid rgba(212, 175, 55, 0.4);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bg-card);
+}
+
+.skill-candidates-table thead {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(212, 175, 55, 0.15));
+}
+
+.skill-candidates-table th {
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--gold-light);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 1rem 1.25rem;
+    text-align: left;
+    border-bottom: 2px solid var(--gold);
+    position: relative;
+}
+
+.skill-candidates-table th::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 25%;
+    height: 50%;
+    width: 1px;
+    background: rgba(212, 175, 55, 0.3);
+}
+
+.skill-candidates-table th:last-child::after {
+    display: none;
+}
+
+/* Column widths */
+.skill-candidates-table .col-name {
+    width: 20%;
+    min-width: 140px;
+}
+
+.skill-candidates-table .col-description {
+    width: 45%;
+}
+
+.skill-candidates-table .col-source {
+    width: 20%;
+    min-width: 120px;
+}
+
+.skill-candidates-table .col-status {
+    width: 15%;
+    min-width: 100px;
+    text-align: center;
+}
+
+/* Table body */
+.skill-candidates-table tbody td {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+    transition: background var(--transition-fast);
+}
+
+/* Striped rows */
+.skill-candidates-table tbody tr.row-even {
+    background: rgba(22, 33, 62, 0.8);
+}
+
+.skill-candidates-table tbody tr.row-odd {
+    background: rgba(26, 26, 46, 0.6);
+}
+
+/* Hover effect */
+.skill-candidates-table tbody tr:hover {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(196, 30, 58, 0.08));
+}
+
+.skill-candidates-table tbody tr:hover td {
+    border-color: rgba(212, 175, 55, 0.3);
+}
+
+/* Last row no border */
+.skill-candidates-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Skill name styling */
+.skill-candidates-table .skill-name {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--gold);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.skill-candidates-table .skill-name::before {
+    content: '🎯';
+    font-size: 0.9rem;
+}
+
+/* Description styling */
+.skill-candidates-table .col-description {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* Source styling */
+.skill-candidates-table td.col-source {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Status column centering */
+.skill-candidates-table td.col-status {
+    text-align: center;
+}
+
+/* Table responsive */
+@media (max-width: 768px) {
+    .skill-candidates-table {
+        font-size: 0.85rem;
+    }
+
+    .skill-candidates-table th,
+    .skill-candidates-table td {
+        padding: 0.75rem;
+    }
+
+    .skill-candidates-table .col-source {
+        display: none;
+    }
+
+    .skill-candidates-table .col-description {
+        width: 50%;
+    }
+
+    .skill-candidates-table .col-name {
+        width: 30%;
+    }
+
+    .skill-candidates-table .col-status {
+        width: 20%;
+    }
+}
+
 /* ===== Empty State ===== */
 .empty {
     color: var(--text-muted);
@@ -1076,5 +1233,184 @@ footer p::before {
 
     .command-header h2 {
         font-size: 1.1rem;
+    }
+}
+
+/* ===== Shogun Output Section ===== */
+.shogun-output-section {
+    background: linear-gradient(135deg, var(--bg-primary) 0%, #0f0f1a 100%);
+    border-bottom: 2px solid var(--gold);
+    padding: 1.5rem 2rem;
+    position: relative;
+}
+
+.shogun-output-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+.shogun-output-container {
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.shogun-output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.shogun-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.shogun-icon {
+    font-size: 1.8rem;
+    filter: drop-shadow(0 0 10px var(--glow-gold));
+}
+
+.shogun-output-header h2 {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--gold);
+    text-shadow: 0 0 20px var(--glow-gold);
+    margin: 0;
+    letter-spacing: 0.1em;
+}
+
+.shogun-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.btn-shogun-refresh {
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, var(--gold), #b8972e);
+    color: var(--bg-primary);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all var(--transition-fast);
+    box-shadow: 0 2px 10px var(--glow-gold);
+}
+
+.btn-shogun-refresh:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px var(--glow-gold);
+}
+
+.btn-shogun-refresh:active {
+    transform: translateY(0);
+}
+
+.shogun-auto-refresh {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.5rem;
+    transition: color var(--transition-fast);
+}
+
+.shogun-auto-refresh:hover {
+    color: var(--gold);
+}
+
+.shogun-auto-refresh input[type="checkbox"] {
+    accent-color: var(--gold);
+    width: 14px;
+    height: 14px;
+}
+
+/* Shogun Terminal */
+.shogun-terminal {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: #a0ffa0;
+    background: #0a0a0a;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    border: 2px solid rgba(212, 175, 55, 0.3);
+    box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 0, 0, 0.3);
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin: 0;
+    min-height: 150px;
+    max-height: 350px;
+    overflow-y: auto;
+}
+
+.shogun-terminal::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.shogun-terminal::-webkit-scrollbar-track {
+    background: #151515;
+    border-radius: 3px;
+}
+
+.shogun-terminal::-webkit-scrollbar-thumb {
+    background: var(--gold);
+    border-radius: 3px;
+}
+
+.shogun-terminal::-webkit-scrollbar-thumb:hover {
+    background: var(--gold-light);
+}
+
+.shogun-terminal.loading {
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.shogun-terminal.error {
+    color: var(--crimson);
+    border-color: rgba(196, 30, 58, 0.4);
+}
+
+/* Shogun Output Responsive */
+@media (max-width: 768px) {
+    .shogun-output-section {
+        padding: 1rem;
+    }
+
+    .shogun-output-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .shogun-output-header h2 {
+        font-size: 1.1rem;
+    }
+
+    .shogun-terminal {
+        font-size: 0.7rem;
+        min-height: 120px;
+        max-height: 250px;
     }
 }

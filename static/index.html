@@ -50,6 +50,28 @@
         </div>
     </section>
 
+    <!-- 将軍ペイン出力 -->
+    <section id="shogun-output" class="shogun-output-section">
+        <div class="shogun-output-container">
+            <div class="shogun-output-header">
+                <div class="shogun-title">
+                    <span class="shogun-icon">🏯</span>
+                    <h2>将軍 進行状況</h2>
+                </div>
+                <div class="shogun-controls">
+                    <button id="shogun-refresh" class="btn-shogun-refresh">
+                        <span>🔄</span> 更新
+                    </button>
+                    <label class="shogun-auto-refresh">
+                        <input type="checkbox" id="shogun-auto-refresh" checked>
+                        自動更新
+                    </label>
+                </div>
+            </div>
+            <pre id="shogun-terminal" class="shogun-terminal">読込中...</pre>
+        </div>
+    </section>
+
     <main>
         <!-- 要対応 -->
         <section id="action-required" class="panel panel-danger">

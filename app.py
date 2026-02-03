@@ -93,6 +93,39 @@ async def get_ashigaru_output(ashigaru_id: str):
         raise HTTPException(status_code=500, detail="tmux not found")
 
 
+@app.get("/api/pane/shogun")
+async def get_shogun_output():
+    """将軍ペインの最新出力を取得する
+
+    Returns:
+        将軍ペインの最新100行の出力をJSON形式で返す
+    """
+    target = "shogun:0.0"
+    try:
+        result = subprocess.run(
+            ["tmux", "capture-pane", "-t", target, "-p", "-S", "-100"],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        if result.returncode != 0:
+            return {
+                "pane": "shogun",
+                "output": "",
+                "error": f"Failed to capture pane: {result.stderr.strip() or 'Pane not found'}"
+            }
+
+        return {
+            "pane": "shogun",
+            "output": result.stdout,
+            "error": None
+        }
+    except subprocess.TimeoutExpired:
+        raise HTTPException(status_code=504, detail="tmux command timed out")
+    except FileNotFoundError:
+        raise HTTPException(status_code=500, detail="tmux not found")
+
+
 @app.post("/api/command")
 async def send_command(request: CommandRequest):
     """将軍ペインに指示を送信する

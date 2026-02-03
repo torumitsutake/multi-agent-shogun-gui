@@ -145,7 +145,7 @@ function renderCompletedToday(items) {
 }
 
 /**
- * スキル化候補セクションを更新
+ * スキル化候補セクションを更新（テーブル形式）
  */
 function renderSkillCandidates(items) {
     const container = document.querySelector('#skill-candidates .content');
@@ -154,20 +154,39 @@ function renderSkillCandidates(items) {
         return;
     }
 
-    container.innerHTML = items.map(item => {
-        const status = item.status || '承認待ち';
-        const statusClass = status === '承認待ち' ? 'badge-pending' : 'badge-info';
-        const description = item.description ? `<div class="description">${escapeHtml(item.description)}</div>` : '';
-        return `
-            <div class="skill-card">
-                <h3>${escapeHtml(item.name)}</h3>
-                ${description}
-                <div class="meta">
-                    <span class="${statusClass}">${escapeHtml(status)}</span>
-                </div>
-            </div>
-        `;
-    }).join('');
+    const table = `
+        <table class="skill-candidates-table">
+            <thead>
+                <tr>
+                    <th class="col-name">スキル名</th>
+                    <th class="col-description">説明</th>
+                    <th class="col-source">発見元</th>
+                    <th class="col-status">状態</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${items.map((item, index) => {
+                    const status = item.status || '承認待ち';
+                    const statusClass = status === '承認待ち' ? 'badge-pending' : 'badge-info';
+                    const description = item.description || '-';
+                    const source = item.source || item.discovered_from || '-';
+                    const rowClass = index % 2 === 0 ? 'row-even' : 'row-odd';
+                    return `
+                    <tr class="${rowClass}">
+                        <td class="col-name">
+                            <span class="skill-name">${escapeHtml(item.name)}</span>
+                        </td>
+                        <td class="col-description">${escapeHtml(description)}</td>
+                        <td class="col-source">${escapeHtml(source)}</td>
+                        <td class="col-status">
+                            <span class="${statusClass}">${escapeHtml(status)}</span>
+                        </td>
+                    </tr>
+                `}).join('')}
+            </tbody>
+        </table>
+    `;
+    container.innerHTML = table;
 }
 
 /**
@@ -411,6 +430,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // コマンド入力初期化
     initCommandInput();
+
+    // 将軍出力初期化
+    initShogunOutput();
 });
 
 // ===== Command Input Functions =====
@@ -495,4 +517,94 @@ function initCommandInput() {
             submitBtn.click();
         }
     });
+}
+
+// ===== Shogun Output Functions =====
+
+let shogunRefreshTimer = null;
+const SHOGUN_REFRESH_INTERVAL = 5000;
+
+/**
+ * 将軍ペインの出力を取得
+ */
+async function fetchShogunOutput() {
+    const terminal = document.getElementById('shogun-terminal');
+
+    try {
+        const response = await fetch('/api/pane/shogun');
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        terminal.classList.remove('loading');
+
+        if (data.error) {
+            terminal.textContent = `エラー: ${data.error}`;
+            terminal.classList.add('error');
+        } else if (!data.output || data.output.trim() === '') {
+            terminal.textContent = '（出力なし）';
+            terminal.classList.remove('error');
+        } else {
+            terminal.textContent = data.output;
+            terminal.classList.remove('error');
+            // 最下部にスクロール
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+    } catch (error) {
+        console.error('Failed to fetch shogun output:', error);
+        terminal.classList.remove('loading');
+        terminal.classList.add('error');
+        terminal.textContent = `取得失敗: ${error.message}`;
+    }
+}
+
+/**
+ * 将軍出力の自動更新を制御
+ */
+function toggleShogunAutoRefresh(enabled) {
+    if (enabled) {
+        // 即座に1回取得
+        fetchShogunOutput();
+        // 定期更新開始
+        shogunRefreshTimer = setInterval(fetchShogunOutput, SHOGUN_REFRESH_INTERVAL);
+    } else {
+        if (shogunRefreshTimer) {
+            clearInterval(shogunRefreshTimer);
+            shogunRefreshTimer = null;
+        }
+    }
+}
+
+/**
+ * 将軍出力セクションを初期化
+ */
+function initShogunOutput() {
+    const refreshBtn = document.getElementById('shogun-refresh');
+    const autoRefreshCheckbox = document.getElementById('shogun-auto-refresh');
+    const terminal = document.getElementById('shogun-terminal');
+
+    if (!refreshBtn || !autoRefreshCheckbox || !terminal) return;
+
+    // 初回読み込み
+    terminal.classList.add('loading');
+    fetchShogunOutput();
+
+    // 手動更新ボタン
+    refreshBtn.addEventListener('click', () => {
+        terminal.classList.add('loading');
+        terminal.textContent = '更新中...';
+        fetchShogunOutput();
+    });
+
+    // 自動更新チェックボックス
+    autoRefreshCheckbox.addEventListener('change', (e) => {
+        toggleShogunAutoRefresh(e.target.checked);
+    });
+
+    // 自動更新を開始
+    if (autoRefreshCheckbox.checked) {
+        toggleShogunAutoRefresh(true);
+    }
 }
