@@ -277,6 +277,15 @@ main {
     color: var(--text-secondary);
 }
 
+/* ===== Full Width Panels ===== */
+#completed-today {
+    grid-column: 1 / -1;
+}
+
+#completed-today .content {
+    max-height: 500px;
+}
+
 /* ===== Table ===== */
 table {
     width: 100%;
