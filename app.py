@@ -24,6 +24,7 @@ def filter_pane_output(output: str) -> str:
     除外対象:
     - 罫線（─────...で構成される行）
     - プロンプト行（❯ で始まる行）
+    - Claude Code ステータス行（⏵⏵, bypass permissions, Context left）
     - 空行の連続（複数の空行は1つに）
     """
     lines = output.split('\n')
@@ -35,6 +36,11 @@ def filter_pane_output(output: str) -> str:
             continue
         # プロンプト行をスキップ
         if line.strip().startswith('❯'):
+            continue
+        # Claude Code ステータス行をスキップ
+        if '⏵⏵' in line or 'bypass permissions' in line:
+            continue
+        if 'Context left until auto-compact' in line:
             continue
         # 空行の連続を1つに
         if not line.strip():
