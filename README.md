@@ -57,15 +57,15 @@ python app.py --dashboard /path/to/dashboard.md --port 8080
 
 ### アクセス
 
-- **Webダッシュボード**: http://localhost:8000
-- **JSON API**: http://localhost:8000/api/dashboard
+- **Webダッシュボード**: http://localhost:8888
+- **JSON API**: http://localhost:8888/api/dashboard
 
 ### コマンドライン引数
 
 | 引数 | 必須 | デフォルト | 説明 |
 |------|------|-----------|------|
 | `--dashboard` | ✅ | - | dashboard.md のパス |
-| `--port` | ❌ | 8000 | サーバーポート |
+| `--port` | ❌ | 8888 | サーバーポート |
 | `--host` | ❌ | 127.0.0.1 | ホストアドレス |
 | `--reload` | ❌ | false | ホットリロード有効化（開発用） |
 

@@ -238,8 +238,8 @@ def main():
     parser.add_argument(
         "--port",
         type=int,
-        default=8000,
-        help="Server port (default: 8000)",
+        default=8888,
+        help="Server port (default: 8888)",
     )
     parser.add_argument(
         "--host",
