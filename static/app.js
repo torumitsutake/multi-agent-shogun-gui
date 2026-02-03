@@ -397,4 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // モーダルイベント初期化
     initModalEvents();
+
+    // モーダルのaria-hidden属性を初期設定（JS動的制御）
+    document.getElementById('ashigaru-modal').setAttribute('aria-hidden', 'true');
 });
