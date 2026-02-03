@@ -154,12 +154,20 @@ function renderSkillCandidates(items) {
         return;
     }
 
-    container.innerHTML = items.map(item => `
-        <div class="skill-card">
-            <h3>${escapeHtml(item.name)}</h3>
-            <div class="meta">${escapeHtml(item.status || '承認待ち')}</div>
-        </div>
-    `).join('');
+    container.innerHTML = items.map(item => {
+        const status = item.status || '承認待ち';
+        const statusClass = status === '承認待ち' ? 'badge-pending' : 'badge-info';
+        const description = item.description ? `<div class="description">${escapeHtml(item.description)}</div>` : '';
+        return `
+            <div class="skill-card">
+                <h3>${escapeHtml(item.name)}</h3>
+                ${description}
+                <div class="meta">
+                    <span class="${statusClass}">${escapeHtml(status)}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 /**
