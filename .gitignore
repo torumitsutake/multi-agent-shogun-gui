@@ -1,6 +1,9 @@
 # Order file (internal use only)
 claude-shogun-orders.md
 
+# Python cache
+__pycache__/
+
 # Claude Code settings
 .claude/*
 !.claude/settings.json
@@ -44,3 +47,10 @@ projects/
 # Internal docs (operation logs, test plans, article drafts)
 docs/
 archive/
+
+# Symlinks to shogun/ runtime data (created by setup_gui.sh)
+config
+logs
+memory
+queue
+status
