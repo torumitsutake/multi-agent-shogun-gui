@@ -16,6 +16,12 @@
 
 [multi-agent-shogun](https://github.com/yohey-w/multi-agent-shogun) の上に載るリアルタイムWeb GUIです。ブラウザひとつで命令を出し、エージェントの稼働状況を確認し、結果をレビューできます。
 
+<p align="center">
+  <img src="screenshot.png" alt="multi-agent-shogun-gui ダッシュボード - リアルタイム監視・制御インターフェース" width="800" style="max-width: 100%;">
+</p>
+
+*将軍ステータス・進行中タスク・足軽ワーカーを表示するライブダッシュボード — AI労働力全体をひとつの画面で監視*
+
 ## 機能
 
 - **ライブダッシュボード** — `dashboard.md` をパースし、要対応事項・進行中タスク・完了タスク・スキル化候補をクリーンなUIで表示（5秒ごとに自動更新）

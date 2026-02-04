@@ -47,6 +47,8 @@
             'section.inProgress': '進行中',
             'section.completedToday': '本日の戦果',
             'section.skillCandidates': 'スキル化候補',
+
+            'completed.count': '{N}件',
             'section.generatedSkills': '生成されたスキル',
             'section.waiting': '待機中',
             'section.inquiries': '伺い事項',
@@ -140,6 +142,8 @@
             'section.inProgress': 'In Progress',
             'section.completedToday': "Today's Results",
             'section.skillCandidates': 'Skill Candidates',
+
+            'completed.count': '{N} items',
             'section.generatedSkills': 'Generated Skills',
             'section.waiting': 'Waiting',
             'section.inquiries': 'Inquiries',
@@ -277,10 +281,11 @@
             saved = localStorage.getItem('shogun-gui-lang');
         } catch (e) { /* localStorage unavailable */ }
 
-        // 2. If not saved, detect from browser
+        // 2. If not saved, use default from config/settings.yaml (language: ja)
         if (!saved) {
-            var browserLang = navigator.language || navigator.userLanguage || '';
-            saved = browserLang.indexOf('ja') !== -1 ? 'ja' : 'en';
+            // Default to 'ja' to match config/settings.yaml setting
+            // User can switch language via UI buttons, which will be saved to localStorage
+            saved = 'ja';
         }
 
         // 3. Set language

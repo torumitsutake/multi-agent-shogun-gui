@@ -199,7 +199,15 @@ function renderInProgress(items) {
  * 本日の戦果セクションを更新
  */
 function renderCompletedToday(items) {
-    const container = document.querySelector('#completed-today .content');
+    const container = document.querySelector('#completed-today-content');
+
+    // 件数バッジを更新
+    const countBadge = document.getElementById('completed-today-count');
+    if (countBadge) {
+        const count = items ? items.length : 0;
+        countBadge.textContent = count > 0 ? t('completed.count').replace('{N}', count) : '';
+    }
+
     if (!items || items.length === 0) {
         container.innerHTML = '<div class="empty">' + t('empty.none') + '</div>';
         return;
@@ -542,6 +550,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // スキルモーダル初期化
     initSkillModal();
+
+    // 本日の戦果折りたたみ初期化
+    initCompletedCollapse();
 });
 
 // ===== Command Input Functions =====
@@ -889,6 +900,57 @@ function initKaroOutput() {
 
     // 定期更新開始
     karoRefreshTimer = setInterval(fetchKaroOutput, KARO_REFRESH_INTERVAL);
+}
+
+// ===== Completed Today Collapse Functions =====
+
+/**
+ * 本日の戦果セクションの折りたたみトグル
+ */
+function toggleCompletedCollapse() {
+    const section = document.getElementById('completed-today');
+    const header = document.getElementById('completed-today-header');
+    const isCollapsed = section.classList.contains('collapsed');
+
+    if (isCollapsed) {
+        section.classList.remove('collapsed');
+        header.setAttribute('aria-expanded', 'true');
+    } else {
+        section.classList.add('collapsed');
+        header.setAttribute('aria-expanded', 'false');
+    }
+
+    // localStorage に保存
+    try {
+        localStorage.setItem('shogun-gui-completed-collapsed', section.classList.contains('collapsed'));
+    } catch (e) { /* localStorage unavailable */ }
+}
+
+/**
+ * 本日の戦果セクションの折りたたみ初期化
+ */
+function initCompletedCollapse() {
+    const header = document.getElementById('completed-today-header');
+    const section = document.getElementById('completed-today');
+    if (!header || !section) return;
+
+    // localStorage から状態を復元（デフォルトは折りたたみ）
+    let collapsed = true;
+    try {
+        const saved = localStorage.getItem('shogun-gui-completed-collapsed');
+        collapsed = saved === null ? true : saved === 'true';
+    } catch (e) { /* localStorage unavailable */ }
+
+    if (collapsed) {
+        section.classList.add('collapsed');
+        header.setAttribute('aria-expanded', 'false');
+    } else {
+        section.classList.remove('collapsed');
+        header.setAttribute('aria-expanded', 'true');
+    }
+
+    // クリックイベント
+    header.addEventListener('click', toggleCompletedCollapse);
 }
 
 // ===== Skill Modal Functions =====

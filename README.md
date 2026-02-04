@@ -16,6 +16,12 @@
 
 A real-time web GUI that sits on top of [multi-agent-shogun](https://github.com/yohey-w/multi-agent-shogun). Give orders, watch your agents work, and review results — all from a single browser tab.
 
+<p align="center">
+  <img src="screenshot.png" alt="multi-agent-shogun-gui dashboard - real-time monitoring and control interface" width="800" style="max-width: 100%;">
+</p>
+
+*Live dashboard showing Shogun status, in-progress tasks, and Ashigaru workers — monitor your entire AI workforce from one screen.*
+
 ## Features
 
 - **Live dashboard** — Parses `dashboard.md` and displays action items, in-progress tasks, completed work, and skill candidates in a clean UI (auto-refreshes every 5 seconds)

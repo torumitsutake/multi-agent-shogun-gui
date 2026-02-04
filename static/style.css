@@ -296,8 +296,44 @@ main {
     grid-column: 1 / -1;
 }
 
-#completed-today .content {
+/* Completed Today Collapse */
+#completed-today h2 {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.completed-count-badge {
+    background: linear-gradient(135deg, var(--gold), #b8972e);
+    color: var(--bg-primary);
+    padding: 0.1rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    margin-left: auto;
+}
+.collapse-indicator {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+}
+#completed-today-content {
     max-height: 500px;
+    overflow-y: auto;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+#completed-today.collapsed #completed-today-content {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+}
+#completed-today.collapsed .collapse-indicator {
+    transform: rotate(0deg);
+}
+#completed-today:not(.collapsed) .collapse-indicator {
+    transform: rotate(180deg);
 }
 
 /* ===== Table ===== */

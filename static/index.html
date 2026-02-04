@@ -104,8 +104,13 @@
 
         <!-- 本日の戦果 -->
         <section id="completed-today" class="panel panel-success">
-            <h2><span class="section-icon">🏆</span> <span data-i18n="section.completedToday">本日の戦果</span></h2>
-            <div class="content"></div>
+            <h2 id="completed-today-header" style="cursor: pointer;" aria-expanded="false" aria-controls="completed-today-content">
+                <span class="section-icon">🏆</span>
+                <span data-i18n="section.completedToday">本日の戦果</span>
+                <span id="completed-today-count" class="completed-count-badge"></span>
+                <span id="completed-today-indicator" class="collapse-indicator">▼</span>
+            </h2>
+            <div id="completed-today-content" class="content"></div>
         </section>
 
         <!-- スキル化候補 -->
