@@ -54,3 +54,5 @@ logs
 memory
 queue
 status
+
+*.pid
