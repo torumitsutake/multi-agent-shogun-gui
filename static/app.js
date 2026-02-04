@@ -7,6 +7,8 @@ const REFRESH_INTERVAL = 5000; // 5秒
 
 let refreshTimer = null;
 let cachedSkillCandidates = []; // スキル候補データをキャッシュ
+let karoRefreshTimer = null;
+const KARO_REFRESH_INTERVAL = 5000;
 
 /**
  * ダッシュボードデータを取得
@@ -22,6 +24,56 @@ async function fetchDashboard() {
         console.error('Failed to fetch dashboard:', error);
         return null;
     }
+}
+
+/**
+ * 簡易Markdownレンダリング
+ */
+function renderSimpleMarkdown(text) {
+    if (!text) return '';
+    // まずXSS対策でエスケープ
+    let escaped = escapeHtml(text);
+    // **太字** → <strong>
+    escaped = escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+    // テーブル処理
+    const lines = escaped.split('\n');
+    let result = [];
+    let inTable = false;
+    let isFirstRow = true;
+
+    for (const line of lines) {
+        const trimmed = line.trim();
+        // テーブル行の検出
+        if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+            // セパレータ行（|---|---|）をスキップ
+            if (/^\|[\s\-:|]+\|$/.test(trimmed)) continue;
+
+            const cells = trimmed.split('|').filter(c => c.trim() !== '').map(c => c.trim());
+            if (!inTable) {
+                result.push('<table class="md-table">');
+                inTable = true;
+                isFirstRow = true;
+            }
+            if (isFirstRow) {
+                result.push('<thead><tr>' + cells.map(c => `<th>${c}</th>`).join('') + '</tr></thead><tbody>');
+                isFirstRow = false;
+            } else {
+                result.push('<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>');
+            }
+        } else {
+            if (inTable) {
+                result.push('</tbody></table>');
+                inTable = false;
+            }
+            // 空行はスキップ、それ以外は<br>付きで追加
+            if (trimmed) {
+                result.push(trimmed + '<br>');
+            }
+        }
+    }
+    if (inTable) result.push('</tbody></table>');
+    return result.join('\n');
 }
 
 /**
@@ -47,10 +99,14 @@ function renderActionRequired(items, skillCandidates) {
         return;
     }
 
-    const actionItemsHtml = (items || []).map(item => `
+    const actionItemsHtml = (items || []).map((item, index) => `
         <div class="action-item">
-            <h3>${escapeHtml(item.title)}</h3>
-            <p>${escapeHtml(item.content)}</p>
+            <div class="action-item-header">
+                <h3>${escapeHtml(item.title)}</h3>
+                <button class="btn-action-delete" data-title="${escapeHtml(item.title)}" data-index="${index}"
+                        title="この項目の削除を将軍に指示">🗑</button>
+            </div>
+            <div class="action-content">${renderSimpleMarkdown(item.content)}</div>
         </div>
     `).join('');
 
@@ -61,6 +117,14 @@ function renderActionRequired(items, skillCandidates) {
     if (skillBadgeBtn) {
         skillBadgeBtn.addEventListener('click', openSkillModal);
     }
+
+    // 削除ボタンのイベントリスナー
+    container.querySelectorAll('.btn-action-delete').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const title = btn.getAttribute('data-title');
+            handleActionDelete(title, btn);
+        });
+    });
 }
 
 /**
@@ -155,8 +219,8 @@ function renderCompletedToday(items) {
                 ${items.map(item => `
                     <tr>
                         <td>${escapeHtml(item['時刻'] || item.time || '-')}</td>
-                        <td>${escapeHtml(item['戦場'] || item.project || '-')}</td>
-                        <td>${escapeHtml(item['任務'] || item.task || '-')}</td>
+                        <td>${escapeHtml(item['戦場'] || item['プロジェクト'] || item.project || '-')}</td>
+                        <td>${escapeHtml(item['任務'] || item['タスク'] || item.task || '-')}</td>
                         <td><span class="badge badge-success">${escapeHtml(item['結果'] || item.result || '-')}</span></td>
                     </tr>
                 `).join('')}
@@ -210,8 +274,13 @@ function renderSkillModalContent(items) {
                 </div>
             </div>
             ${isPending ? `
-            <div class="skill-card-actions">
-                <span class="skill-action-hint">殿のご裁可をお待ち申し上げます</span>
+            <div class="skill-card-actions" id="skill-btns-${escapeHtml(item.name)}">
+                <button class="btn-approve btn-approve-skill" data-skill-name="${escapeHtml(item.name)}">
+                    ✅ 承認
+                </button>
+                <button class="btn-reject btn-reject-skill" data-skill-name="${escapeHtml(item.name)}">
+                    ❌ 否認
+                </button>
             </div>
             ` : ''}
         </div>
@@ -468,6 +537,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // 将軍出力初期化
     initShogunOutput();
 
+    // 家老出力初期化
+    initKaroOutput();
+
     // スキルモーダル初期化
     initSkillModal();
 });
@@ -495,6 +567,87 @@ async function sendCommand(command) {
     } catch (error) {
         console.error('Failed to send command:', error);
         return { success: false, error: error.message };
+    }
+}
+
+// ===== Approval Functions =====
+
+/**
+ * 承認ボタン押下時の処理
+ */
+async function handleApproval(title, btnContainer) {
+    const result = await sendCommand(`${title}を承認する`);
+    if (result.success) {
+        btnContainer.innerHTML = '<span class="btn-sent btn-sent-approved">✅ 承認済み</span>';
+    } else {
+        btnContainer.innerHTML += `<span class="btn-sent-error">送信失敗: ${escapeHtml(result.error || '不明')}</span>`;
+    }
+}
+
+/**
+ * 否認ボタン押下時の処理
+ */
+async function handleRejection(title, btnContainer) {
+    // 理由入力欄を表示
+    const existingInput = btnContainer.querySelector('.reject-reason-container');
+    if (existingInput) {
+        // 既に表示中なら送信実行
+        const reasonInput = existingInput.querySelector('.reject-reason-input');
+        const reason = reasonInput.value.trim();
+        const message = reason
+            ? `${title}を否認する。理由: ${reason}`
+            : `${title}を否認する`;
+        const result = await sendCommand(message);
+        if (result.success) {
+            btnContainer.innerHTML = '<span class="btn-sent btn-sent-rejected">❌ 否認済み</span>';
+        } else {
+            btnContainer.innerHTML += `<span class="btn-sent-error">送信失敗: ${escapeHtml(result.error || '不明')}</span>`;
+        }
+        return;
+    }
+
+    // 理由入力欄を追加
+    const reasonContainer = document.createElement('div');
+    reasonContainer.className = 'reject-reason-container';
+    reasonContainer.innerHTML = `
+        <input type="text" class="reject-reason-input" placeholder="否認理由（省略可）" />
+        <button class="btn-reject-confirm">否認を送信</button>
+    `;
+    btnContainer.appendChild(reasonContainer);
+
+    // 送信ボタンのイベント
+    reasonContainer.querySelector('.btn-reject-confirm').addEventListener('click', () => {
+        handleRejection(title, btnContainer);
+    });
+
+    // Enter キーで送信
+    reasonContainer.querySelector('.reject-reason-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            handleRejection(title, btnContainer);
+        }
+    });
+
+    // 入力欄にフォーカス
+    reasonContainer.querySelector('.reject-reason-input').focus();
+}
+
+/**
+ * 要対応項目の削除ボタン押下時の処理
+ */
+async function handleActionDelete(title, btn) {
+    if (!confirm('この要対応項目の削除を将軍に指示しますか？')) {
+        return;
+    }
+    btn.disabled = true;
+    btn.textContent = '送信中...';
+    const result = await sendCommand(`要対応の「${title}」を削除せよ`);
+    if (result.success) {
+        btn.textContent = '✓ 送信済み';
+        btn.classList.add('btn-delete-sent');
+    } else {
+        btn.textContent = '× 失敗';
+        btn.classList.add('btn-delete-error');
+        btn.disabled = false;
     }
 }
 
@@ -584,7 +737,16 @@ async function fetchShogunOutput() {
             terminal.textContent = '（出力なし）';
             terminal.classList.remove('error');
         } else {
-            terminal.textContent = data.output;
+            // 行ごとに分割してハイライト処理
+            const lines = data.output.split('\n');
+            const htmlLines = lines.map(line => {
+                // 行が「❯ 」で始まる場合、コマンドラインとしてハイライト
+                if (line.startsWith('❯ ')) {
+                    return `<span class="command-line">${escapeHtml(line)}</span>`;
+                }
+                return escapeHtml(line);
+            });
+            terminal.innerHTML = htmlLines.join('<br>');
             terminal.classList.remove('error');
             // 最下部にスクロール
             terminal.scrollTop = terminal.scrollHeight;
@@ -646,6 +808,89 @@ function initShogunOutput() {
     }
 }
 
+// ===== Karo Output Functions =====
+
+async function fetchKaroOutput() {
+    const terminal = document.getElementById('karo-terminal');
+    const badge = document.getElementById('karo-status-badge');
+    const statusText = document.getElementById('karo-status-text');
+
+    try {
+        const response = await fetch('/api/pane/karo');
+        if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+        const data = await response.json();
+
+        // バッジのステータス更新
+        if (data.status === 'busy') {
+            badge.className = 'karo-badge badge-busy';
+            statusText.textContent = '処理中';
+        } else {
+            badge.className = 'karo-badge badge-idle';
+            statusText.textContent = '待機中';
+        }
+
+        // ターミナル出力更新
+        if (terminal) {
+            terminal.classList.remove('loading');
+            if (data.error) {
+                terminal.textContent = `エラー: ${data.error}`;
+                terminal.classList.add('error');
+            } else if (!data.output || data.output.trim() === '') {
+                terminal.textContent = '（出力なし）';
+            } else {
+                // 将軍と同じハイライト処理
+                const lines = data.output.split('\n');
+                const htmlLines = lines.map(line => {
+                    if (line.startsWith('❯ ')) {
+                        return `<span class="command-line">${escapeHtml(line)}</span>`;
+                    }
+                    return escapeHtml(line);
+                });
+                terminal.innerHTML = htmlLines.join('<br>');
+                terminal.classList.remove('error');
+                terminal.scrollTop = terminal.scrollHeight;
+            }
+        }
+    } catch (error) {
+        console.error('Failed to fetch karo output:', error);
+        if (badge) {
+            badge.className = 'karo-badge badge-idle';
+            statusText.textContent = '取得失敗';
+        }
+    }
+}
+
+function toggleKaroCollapse() {
+    const collapse = document.getElementById('karo-output-collapse');
+    const expanded = collapse.getAttribute('aria-expanded') === 'true';
+    collapse.setAttribute('aria-expanded', !expanded);
+    if (!expanded) {
+        // 開く時に最新データを取得
+        fetchKaroOutput();
+    }
+}
+
+function initKaroOutput() {
+    const badge = document.getElementById('karo-status-badge');
+    const closeBtn = document.getElementById('karo-collapse-close');
+
+    if (!badge) return;
+
+    // バッジクリックでトグル
+    badge.addEventListener('click', toggleKaroCollapse);
+
+    // 閉じるボタン
+    if (closeBtn) {
+        closeBtn.addEventListener('click', toggleKaroCollapse);
+    }
+
+    // 初回取得（バッジステータスのみ更新）
+    fetchKaroOutput();
+
+    // 定期更新開始
+    karoRefreshTimer = setInterval(fetchKaroOutput, KARO_REFRESH_INTERVAL);
+}
+
 // ===== Skill Modal Functions =====
 
 /**
@@ -657,6 +902,22 @@ function openSkillModal() {
 
     // モーダル内容を更新
     content.innerHTML = renderSkillModalContent(cachedSkillCandidates);
+
+    // スキル候補の承認/否認イベント
+    content.querySelectorAll('.btn-approve-skill').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const name = btn.getAttribute('data-skill-name');
+            const btnContainer = document.getElementById(`skill-btns-${name}`);
+            handleApproval(`スキル化候補「${name}」`, btnContainer);
+        });
+    });
+    content.querySelectorAll('.btn-reject-skill').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const name = btn.getAttribute('data-skill-name');
+            const btnContainer = document.getElementById(`skill-btns-${name}`);
+            handleRejection(`スキル化候補「${name}」`, btnContainer);
+        });
+    });
 
     // モーダルを表示
     modal.setAttribute('aria-hidden', 'false');

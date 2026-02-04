@@ -34,9 +34,15 @@ def filter_pane_output(output: str) -> str:
         # 罫線をスキップ（5つ以上の─を含む行）
         if '─' * 5 in line:
             continue
-        # プロンプト行をスキップ
-        if line.strip().startswith('❯'):
-            continue
+        # プロンプト行のうち、空プロンプト（❯ のみ、または❯ + スペースのみ）だけをスキップ
+        # 殿の命令（❯ 命令テキスト）は残す
+        stripped = line.strip()
+        if stripped.startswith('❯'):
+            after_prompt = stripped[1:].strip()  # ❯ を除去してtrim
+            if not after_prompt:
+                # 空プロンプトなのでスキップ
+                continue
+            # else: 実質的なテキストがあるので、この行は残す（continueしない）
         # Claude Code ステータス行をスキップ
         if '⏵⏵' in line or 'bypass permissions' in line:
             continue
@@ -153,6 +159,57 @@ async def get_shogun_output():
         return {
             "pane": "shogun",
             "output": filter_pane_output(result.stdout),
+            "error": None
+        }
+    except subprocess.TimeoutExpired:
+        raise HTTPException(status_code=504, detail="tmux command timed out")
+    except FileNotFoundError:
+        raise HTTPException(status_code=500, detail="tmux not found")
+
+
+@app.get("/api/pane/karo")
+async def get_karo_output():
+    """家老ペインの最新出力を取得する
+
+    Returns:
+        家老ペインの最新50行の出力とステータスをJSON形式で返す
+    """
+    target = "multiagent:0.0"
+    try:
+        result = subprocess.run(
+            ["tmux", "capture-pane", "-t", target, "-p", "-S", "-50"],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        if result.returncode != 0:
+            return {
+                "pane": "karo",
+                "output": "",
+                "status": "idle",
+                "error": f"Failed to capture pane: {result.stderr.strip() or 'Pane not found'}"
+            }
+
+        raw_output = result.stdout
+        filtered_output = filter_pane_output(raw_output)
+
+        # ステータス判定: 末尾5行をチェック
+        last_lines = raw_output.strip().split('\n')[-5:]
+        last_text = '\n'.join(last_lines)
+        if 'esc to interrupt' in last_text:
+            status = "busy"
+        elif any(kw in last_text for kw in ['thinking', 'Thinking', 'Effecting',
+                 'Boondoggling', 'Puzzling', 'Calculating', 'Fermenting', 'Crunching']):
+            status = "busy"
+        elif any(line.strip().startswith('❯') for line in last_lines):
+            status = "idle"
+        else:
+            status = "busy"
+
+        return {
+            "pane": "karo",
+            "output": filtered_output,
+            "status": status,
             "error": None
         }
     except subprocess.TimeoutExpired:

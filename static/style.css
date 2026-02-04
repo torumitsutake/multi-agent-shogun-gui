@@ -1415,6 +1415,25 @@ footer p::before {
     }
 }
 
+/* ===== Command Line Highlight (Shogun Output) ===== */
+.command-line {
+    display: inline-block;
+    padding: 0.5rem 0.8rem;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(196, 30, 58, 0.08));
+    border-left: 4px solid var(--gold);
+    border-radius: 4px;
+    color: var(--gold-light);
+    font-weight: 700;
+    text-shadow: 0 0 10px var(--glow-gold);
+    transition: all var(--transition-fast);
+}
+
+.command-line:hover {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(196, 30, 58, 0.12));
+    border-color: var(--gold-light);
+    box-shadow: 0 2px 10px var(--glow-gold);
+}
+
 /* ===== Skill Candidates Card Layout ===== */
 .skill-candidates-grid {
     display: grid;
@@ -1751,4 +1770,254 @@ footer p::before {
         width: 95%;
         max-height: 90vh;
     }
+}
+
+/* ===== Karo Status Badge ===== */
+.karo-badge {
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+    background: var(--surface);
+    color: var(--text-secondary);
+}
+.karo-badge:hover {
+    border-color: var(--gold);
+    box-shadow: 0 0 8px var(--glow-gold);
+}
+.karo-badge.badge-busy {
+    background: linear-gradient(135deg, var(--crimson), rgba(196, 30, 58, 0.7));
+    color: white;
+    border-color: var(--crimson);
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+.karo-badge.badge-idle {
+    background: var(--surface);
+    color: var(--text-secondary);
+}
+
+@keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 5px rgba(196, 30, 58, 0.3); }
+    50% { box-shadow: 0 0 15px rgba(196, 30, 58, 0.6); }
+}
+
+/* ===== Karo Collapse Terminal ===== */
+.karo-collapse {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, margin 0.3s ease, padding 0.3s ease;
+    margin-top: 0;
+}
+.karo-collapse[aria-expanded="true"] {
+    max-height: 350px;
+    margin-top: 1rem;
+    overflow-y: auto;
+}
+.karo-collapse-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+.karo-collapse-header h3 {
+    font-size: 1rem;
+    color: var(--gold);
+    margin: 0;
+}
+.btn-karo-close {
+    background: var(--surface);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+.btn-karo-close:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+}
+.karo-terminal {
+    background: var(--terminal-bg, #0d0d1a);
+    color: var(--terminal-text, #c0c0c0);
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    max-height: 250px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    margin: 0;
+}
+
+/* ===== Action Required Markdown ===== */
+.action-content {
+    line-height: 1.6;
+}
+.action-content strong {
+    color: var(--gold);
+}
+.md-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.5rem 0;
+    font-size: 0.85rem;
+}
+.md-table th, .md-table td {
+    border: 1px solid var(--border-color);
+    padding: 0.4rem 0.6rem;
+    text-align: left;
+}
+.md-table th {
+    background: var(--surface);
+    color: var(--gold);
+    font-weight: 600;
+}
+.md-table tr:hover {
+    background: rgba(212, 175, 55, 0.05);
+}
+
+/* ===== Approval/Rejection Buttons ===== */
+.skill-card-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.8rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.btn-approve,
+.btn-reject {
+    padding: 0.5rem 1.2rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border: 1px solid;
+    transition: all 0.2s ease;
+}
+
+.btn-approve {
+    background: linear-gradient(135deg, rgba(34, 139, 34, 0.8), rgba(34, 139, 34, 0.6));
+    color: #e0ffe0;
+    border-color: rgba(34, 139, 34, 0.6);
+}
+.btn-approve:hover {
+    background: linear-gradient(135deg, rgba(34, 139, 34, 1), rgba(34, 139, 34, 0.8));
+    box-shadow: 0 0 10px rgba(34, 139, 34, 0.4);
+}
+
+.btn-reject {
+    background: linear-gradient(135deg, rgba(196, 30, 58, 0.6), rgba(139, 0, 0, 0.4));
+    color: #ffe0e0;
+    border-color: rgba(196, 30, 58, 0.5);
+}
+.btn-reject:hover {
+    background: linear-gradient(135deg, rgba(196, 30, 58, 0.8), rgba(139, 0, 0, 0.6));
+    box-shadow: 0 0 10px rgba(196, 30, 58, 0.4);
+}
+
+.btn-sent {
+    display: inline-block;
+    padding: 0.5rem 1.2rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+.btn-sent-approved {
+    color: #90ee90;
+    background: rgba(34, 139, 34, 0.2);
+    border: 1px solid rgba(34, 139, 34, 0.3);
+}
+.btn-sent-rejected {
+    color: #ffb0b0;
+    background: rgba(196, 30, 58, 0.2);
+    border: 1px solid rgba(196, 30, 58, 0.3);
+}
+.btn-sent-error {
+    color: #ff6b6b;
+    font-size: 0.8rem;
+    margin-left: 0.5rem;
+}
+
+.reject-reason-container {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    width: 100%;
+}
+.reject-reason-input {
+    flex: 1;
+    padding: 0.4rem 0.8rem;
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+}
+.reject-reason-input:focus {
+    border-color: var(--gold);
+    outline: none;
+    box-shadow: 0 0 5px var(--glow-gold);
+}
+.btn-reject-confirm {
+    padding: 0.4rem 0.8rem;
+    background: linear-gradient(135deg, rgba(196, 30, 58, 0.7), rgba(139, 0, 0, 0.5));
+    color: #ffe0e0;
+    border: 1px solid rgba(196, 30, 58, 0.5);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+.btn-reject-confirm:hover {
+    background: linear-gradient(135deg, rgba(196, 30, 58, 0.9), rgba(139, 0, 0, 0.7));
+}
+
+/* ===== Action Item Delete Button ===== */
+.action-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+.action-item-header h3 {
+    flex: 1;
+    margin: 0;
+}
+.btn-action-delete {
+    background: transparent;
+    border: 1px solid rgba(196, 30, 58, 0.3);
+    color: rgba(255, 180, 180, 0.6);
+    border-radius: 4px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+.btn-action-delete:hover {
+    background: rgba(196, 30, 58, 0.3);
+    color: #ffe0e0;
+    border-color: rgba(196, 30, 58, 0.6);
+}
+.btn-action-delete:disabled {
+    cursor: default;
+    opacity: 0.7;
+}
+.btn-action-delete.btn-delete-sent {
+    background: rgba(34, 139, 34, 0.2);
+    color: #90ee90;
+    border-color: rgba(34, 139, 34, 0.3);
+}
+.btn-action-delete.btn-delete-error {
+    background: rgba(196, 30, 58, 0.3);
+    color: #ff6b6b;
+    border-color: rgba(196, 30, 58, 0.5);
 }

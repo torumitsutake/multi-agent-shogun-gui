@@ -81,7 +81,7 @@ def parse_action_required(section: str) -> list[dict]:
     """要対応セクションをパース"""
     items = []
 
-    # ### で始まるサブセクションを抽出
+    # ### で始まるサブセクションを抽出（既存ロジック・後方互換）
     subsections = re.split(r"\n### ", section)
     for sub in subsections[1:]:  # 最初はヘッダー部分なのでスキップ
         lines = sub.strip().split("\n")
@@ -99,6 +99,55 @@ def parse_action_required(section: str) -> list[dict]:
             "content": "\n".join(content_lines),
         })
 
+    # ### でアイテムが見つからなかった場合のフォールバック
+    if not items:
+        lines = section.split("\n")
+        # ヘッダー行（「要対応」等）と区切り線をスキップ
+        body_lines = []
+        for line in lines[1:]:
+            if line.strip() == "---":
+                break
+            body_lines.append(line)
+
+        body = "\n".join(body_lines).strip()
+
+        # 「なし」のみの場合
+        if not body or body == "なし":
+            return []
+
+        # **【...】...** パターンでアイテムを分割
+        bold_pattern = re.compile(r'^\*\*【(.+?)】(.+?)\*\*$')
+        current_title = None
+        current_lines = []
+
+        for line in body_lines:
+            match = bold_pattern.match(line.strip())
+            if match:
+                # 前のアイテムを保存
+                if current_title is not None:
+                    items.append({
+                        "title": current_title,
+                        "content": "\n".join(current_lines).strip(),
+                    })
+                current_title = f"【{match.group(1)}】{match.group(2)}"
+                current_lines = []
+            elif current_title is not None:
+                current_lines.append(line)
+
+        # 最後のアイテムを保存
+        if current_title is not None:
+            items.append({
+                "title": current_title,
+                "content": "\n".join(current_lines).strip(),
+            })
+
+        # **【...】** パターンもなかった場合、本文全体を1アイテムとして扱う
+        if not items and body:
+            items.append({
+                "title": "要対応事項",
+                "content": body,
+            })
+
     return items
 
 
@@ -115,6 +164,8 @@ def parse_table(section: str) -> list[dict]:
                 headers = cells
             else:
                 if len(cells) == len(headers):
+                    if all(c == '-' for c in cells):
+                        continue
                     row = dict(zip(headers, cells))
                     rows.append(row)
 

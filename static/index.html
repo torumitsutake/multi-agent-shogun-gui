@@ -66,9 +66,20 @@
                         <input type="checkbox" id="shogun-auto-refresh" checked>
                         自動更新
                     </label>
+                    <button id="karo-status-badge" class="karo-badge badge-idle"
+                            title="クリックで家老ターミナル表示/非表示">
+                        📋 家老: <span id="karo-status-text">待機中</span>
+                    </button>
                 </div>
             </div>
             <pre id="shogun-terminal" class="shogun-terminal">読込中...</pre>
+            <div id="karo-output-collapse" class="karo-collapse" aria-expanded="false">
+                <div class="karo-collapse-header">
+                    <h3>📋 家老 進行状況</h3>
+                    <button id="karo-collapse-close" class="btn-karo-close">▲ 閉じる</button>
+                </div>
+                <pre id="karo-terminal" class="karo-terminal">読込中...</pre>
+            </div>
         </div>
     </section>
 
