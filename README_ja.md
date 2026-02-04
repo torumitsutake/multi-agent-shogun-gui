@@ -2,7 +2,7 @@
 
 # multi-agent-shogun-gui
 
-**[multi-agent-shogun](https://github.com/yohey-w/multi-agent-shogun) のWebダッシュボード — ブラウザからAI軍団を監視・指揮**
+**[multi-agent-shogun](https://github.com/yohey-w/multi-agent-shogun) の軍議場（Web指揮所） — ブラウザより全軍を監視し、下知を飛ばす**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Built_for-Claude_Code-blueviolet)](https://code.claude.com)
@@ -14,23 +14,23 @@
 
 ---
 
-[multi-agent-shogun](https://github.com/yohey-w/multi-agent-shogun) の上に載るリアルタイムWeb GUIです。ブラウザひとつで命令を出し、エージェントの稼働状況を確認し、結果をレビューできます。
+[multi-agent-shogun](https://github.com/yohey-w/multi-agent-shogun) の上に据えるリアルタイム軍議場（Web GUI）でござる。ブラウザひとつで下知を飛ばし、諸隊の動きを睨み、戦果を検分することができるのじゃ。
 
 <p align="center">
   <img src="screenshot.png" alt="multi-agent-shogun-gui ダッシュボード - リアルタイム監視・制御インターフェース" width="800" style="max-width: 100%;">
 </p>
 
-*将軍ステータス・進行中タスク・足軽ワーカーを表示するライブダッシュボード — AI労働力全体をひとつの画面で監視*
+*将軍の陣容・進行中の作戦・足軽の働きぶりを映す陣中絵図 — AI全軍をひとつの画面にて統覧できるのじゃ*
 
-## 機能
+## 備えの功能
 
-- **ライブダッシュボード** — `dashboard.md` をパースし、要対応事項・進行中タスク・完了タスク・スキル化候補をクリーンなUIで表示（5秒ごとに自動更新）
-- **コマンド入力** — ブラウザから将軍に直接指示を送信（`Cmd+Enter` / `Ctrl+Enter`）
-- **将軍ターミナル** — tmuxにアタッチせずに将軍のリアルタイム出力を確認
-- **足軽モニター** — 進捗テーブルのワーカーをクリックすると、モーダルでペイン出力をリアルタイム表示
-- **スキル化候補ビューア** — 提案されたスキルをポップアップカードレイアウトで閲覧
+- **陣中絵図（ライブダッシュボード）** — `dashboard.md` を読み解き、要対応の急報・進行中の作戦・完了した武功・スキル化候補を整然たるUIで表示する（五秒ごとに自動更新）
+- **下知入力** — ブラウザより将軍に直接命令を送ることができる（`Cmd+Enter` / `Ctrl+Enter`）
+- **将軍の陣中日記** — tmuxにアタッチせずとも、将軍の働きぶりをリアルタイムで検分できる
+- **足軽の動静** — 進捗の軍勢表にてワーカーをクリックすれば、モーダルにてペイン出力をリアルタイム表示する
+- **スキル化候補の目利き** — 提案されたスキルを札組み（ポップアップカード）で一覧できる
 
-## アーキテクチャ
+## 城郭の構え
 
 ```
 multi-agent-shogun-gui/
@@ -60,37 +60,39 @@ multi-agent-shogun-gui/
     └── ...
 ```
 
-GUIは `dashboard.md` と tmux ペイン出力を FastAPI バックエンド経由で読み取ります。CLIエージェントシステム（`shogun/`）は tmux 内で独立して動作し、GUIはその上に載る読み取り・指揮レイヤーです。
+GUIは `dashboard.md` と tmux ペイン出力を FastAPI バックエンド経由で読み取る仕組みでござる。CLIの軍制（`shogun/`）は tmux 内にて独立して動いており、GUIはその上に載る物見櫓・指揮所の役割を果たすのじゃ。
 
-## 前提条件
+## 出陣の備え
 
-- **macOS または Linux**（WindowsはWSL2）
+以下の武具を揃えてから参陣されよ：
+
+- **macOS または Linux**（WindowsはWSL2にて参陣のこと）
 - **Python 3.8+**
 - **tmux**
 - **Claude Code CLI**（`claude`）
 - **Node.js**（MCPサーバー用）
 
-## クイックスタート
+## 陣立ての儀
 
 ```bash
-# 1. クローン
+# 一、陣地を構える
 git clone https://github.com/torumitsutake/multi-agent-shogun-gui.git
 cd multi-agent-shogun-gui
 
-# 2. 初回セットアップ（CLI依存関係 + GUI依存関係をインストール）
+# 二、初回の陣立て（CLI依存関係 + GUI依存関係をインストール）
 chmod +x setup_gui.sh start_gui.sh stop_gui.sh
 ./setup_gui.sh
 
-# 3. 起動（エージェント + GUI）
+# 三、出陣（エージェント + GUI）
 ./start_gui.sh
 
-# 4. ブラウザで開く
+# 四、軍議場をブラウザにて開く
 open http://127.0.0.1:1059
 ```
 
-## 使い方
+## 出陣の作法
 
-### 起動
+### 出陣
 
 ```bash
 ./start_gui.sh                # エージェント + GUI を起動（デフォルト）
@@ -100,7 +102,7 @@ open http://127.0.0.1:1059
 ./start_gui.sh -c              # クリーンスタート（エージェントをリセット）
 ```
 
-### 停止
+### 退陣
 
 ```bash
 ./stop_gui.sh                  # GUIのみ停止
@@ -108,37 +110,37 @@ open http://127.0.0.1:1059
 ./stop_gui.sh -f               # 強制停止（SIGKILL）
 ```
 
-### tmux セッション
+### tmux 陣営
 
-エージェントシステムは2つのtmuxセッションで動作します：
+軍制は二つのtmux陣営にて動いておる：
 
-| セッション | 内容 | アタッチ |
-|-----------|------|---------|
+| 陣営 | 布陣 | 参陣の仕方 |
+|------|------|-----------|
 | `shogun` | 将軍（総大将） | `tmux attach -t shogun` |
 | `multiagent` | 家老（ペイン0）+ 足軽1-8（ペイン1-8） | `tmux attach -t multiagent` |
 
-### 便利なエイリアス（セットアップで追加）
+### 便利な合言葉（セットアップで追加）
 
 ```bash
-css   # 将軍セッションにアタッチ
-csm   # multiagentセッションにアタッチ
-csg   # GUIダッシュボードを起動
+css   # 将軍の陣にアタッチ
+csm   # multiagent陣営にアタッチ
+csg   # 軍議場（GUIダッシュボード）を起動
 ```
 
-## Shogun Coreのアップデート
+## 本陣の更新
 
-`shogun/` ディレクトリは [yohey-w/multi-agent-shogun](https://github.com/yohey-w/multi-agent-shogun) からの [git subtree](https://www.atlassian.com/git/tutorials/git-subtree) として管理されています。
+`shogun/` の陣は [yohey-w/multi-agent-shogun](https://github.com/yohey-w/multi-agent-shogun) からの [git subtree](https://www.atlassian.com/git/tutorials/git-subtree) として管理されておる。本陣の最新の軍法を取り入れるには、以下の通りにいたせ。
 
 ```bash
-# upstreamリモートの追加（初回のみ）
+# upstreamリモートの追加（初陣のみ）
 git remote add upstream git@github.com:yohey-w/multi-agent-shogun.git
 
-# 最新の変更を取得
+# 最新の軍法を取得
 git fetch upstream
 git subtree pull --prefix=shogun upstream main --squash
 ```
 
-## APIエンドポイント
+## 伝令の経路
 
 | メソッド | エンドポイント | 説明 |
 |---------|--------------|------|
@@ -148,17 +150,17 @@ git subtree pull --prefix=shogun upstream main --squash
 | `GET` | `/api/ashigaru/{ashigaru_id}/output` | 足軽ペイン出力 |
 | `POST` | `/api/command` | 将軍にコマンド送信 |
 
-## トラブルシューティング
+## 陣中の難儀
 
 <details>
-<summary><b>GUIが起動しない？</b></summary>
+<summary><b>軍議場が開かぬ？</b></summary>
 
-依存パッケージがインストールされているか確認：
+兵糧（依存パッケージ）が揃っておるか確認いたせ：
 ```bash
 pip3 install -r requirements.txt
 ```
 
-別のインスタンスが動いていないか確認：
+別の陣が張られておらぬか確認：
 ```bash
 ./stop_gui.sh
 ./start_gui.sh
@@ -167,9 +169,9 @@ pip3 install -r requirements.txt
 </details>
 
 <details>
-<summary><b>ダッシュボードにデータが表示されない？</b></summary>
+<summary><b>陣中絵図にデータが映らぬ？</b></summary>
 
-エージェントが稼働中で `dashboard.md` が存在するか確認：
+軍勢が動いており `dashboard.md` が存在するか確認いたせ：
 ```bash
 ls -la dashboard.md           # shogun/dashboard.md へのシンボリックリンクのはず
 tmux has-session -t shogun    # 0が返れば正常
@@ -178,25 +180,25 @@ tmux has-session -t shogun    # 0が返れば正常
 </details>
 
 <details>
-<summary><b>足軽の出力が表示されない？</b></summary>
+<summary><b>足軽の動静が見えぬ？</b></summary>
 
-GUIは `tmux capture-pane` でtmuxペイン出力を読み取ります。multiagentセッションが動作しているか確認：
+GUIは `tmux capture-pane` にてtmuxペイン出力を読み取っておる。multiagent陣営が動いておるか確認いたせ：
 ```bash
 tmux has-session -t multiagent
 ```
 
 </details>
 
-CLI関連の問題については、[multi-agent-shogun トラブルシューティングガイド](https://github.com/yohey-w/multi-agent-shogun#troubleshooting)を参照してください。
+CLI軍制に関わる難儀は、[multi-agent-shogun 陣中救護の書](https://github.com/yohey-w/multi-agent-shogun#troubleshooting)を参照されたし。
 
-## クレジット
+## 恩義
 
-このプロジェクトは [yohey-w](https://github.com/yohey-w) 氏の [multi-agent-shogun](https://github.com/yohey-w/multi-agent-shogun) をベースに構築されています。Claude Code と tmux を活用した強力なマルチエージェント並列開発フレームワークであり、本GUIを支えるCLIベースのエージェント階層（将軍→家老→足軽）はすべて multi-agent-shogun に由来します。この卓越した基盤に深く感謝いたします。
+この軍議場は [yohey-w](https://github.com/yohey-w) 殿の [multi-agent-shogun](https://github.com/yohey-w/multi-agent-shogun) を礎に築かれたものでござる。Claude Code と tmux を駆使した強力なる並列開発の軍制であり、本GUIを支えるCLI軍制の階層（将軍→家老→足軽）はすべて multi-agent-shogun に由来する。この卓越した軍法の基盤に深き恩義を表するものなり。
 
-このプロジェクトが役に立ったら、ぜひ元リポジトリにスターを: [⭐ multi-agent-shogun](https://github.com/yohey-w/multi-agent-shogun)
+この軍議場が御役に立ったならば、ぜひ本陣にも星印を献上されたし: [⭐ multi-agent-shogun](https://github.com/yohey-w/multi-agent-shogun)
 
-- 原型: [Claude-Code-Communication](https://github.com/Akira-Papa/Claude-Code-Communication) by Akira-Papa
+- 軍法の原型: [Claude-Code-Communication](https://github.com/Akira-Papa/Claude-Code-Communication) by Akira-Papa
 
-## ライセンス
+## 御定書
 
 [MIT](LICENSE)
