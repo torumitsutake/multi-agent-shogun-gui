@@ -180,6 +180,19 @@ else
 fi
 
 # ============================================================
+# STEP 1.5: tmuxペイン幅拡張（GUI表示用）
+# ============================================================
+log_info "tmuxペイン幅を拡張中..."
+if tmux has-session -t shogun 2>/dev/null; then
+    tmux resize-window -t shogun -x 200 2>/dev/null || true
+fi
+if tmux has-session -t multiagent 2>/dev/null; then
+    tmux resize-window -t multiagent -x 200 2>/dev/null || true
+fi
+log_success "tmuxペイン幅拡張完了"
+echo ""
+
+# ============================================================
 # STEP 2: GUI起動
 # ============================================================
 log_info "STEP 2: GUIダッシュボード起動"

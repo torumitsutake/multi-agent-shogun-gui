@@ -8,6 +8,8 @@
 [![Claude Code](https://img.shields.io/badge/Built_for-Claude_Code-blueviolet)](https://code.claude.com)
 [![Python](https://img.shields.io/badge/Python-FastAPI-blue)]()
 
+[English](README.md) | [日本語](README_ja.md)
+
 </div>
 
 ---
