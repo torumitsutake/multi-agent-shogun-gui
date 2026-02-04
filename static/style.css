@@ -719,6 +719,10 @@ td {
     opacity: 0.3;
 }
 
+html[lang="en"] .empty::before {
+    content: 'None';
+}
+
 /* ===== Footer ===== */
 footer {
     text-align: center;
@@ -2020,4 +2024,57 @@ footer p::before {
     background: rgba(196, 30, 58, 0.3);
     color: #ff6b6b;
     border-color: rgba(196, 30, 58, 0.5);
+}
+
+/* ===== Language Switcher ===== */
+.lang-switcher {
+    display: flex;
+    gap: 0.25rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.2rem;
+}
+
+.lang-btn {
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.35rem 0.75rem;
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+
+.lang-btn:hover {
+    color: var(--gold);
+    background: rgba(212, 175, 55, 0.1);
+}
+
+.lang-btn.active {
+    background: linear-gradient(135deg, var(--gold), #b8972e);
+    color: var(--bg-primary);
+    border-color: var(--gold);
+    box-shadow: 0 2px 8px var(--glow-gold);
+}
+
+/* ===== Section Icon (emoji separator) ===== */
+.section-icon {
+    flex-shrink: 0;
+}
+
+/* Language Switcher Responsive */
+@media (max-width: 768px) {
+    .lang-switcher {
+        order: -1;
+    }
+
+    .lang-btn {
+        font-size: 0.7rem;
+        padding: 0.3rem 0.6rem;
+    }
 }

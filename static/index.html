@@ -5,24 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0a0a0f">
     <meta name="description" content="multi-agent-shogun 戦況ダッシュボード">
-    <title>戦況報告 - multi-agent-shogun</title>
+    <title data-i18n="page.title">戦況報告 - multi-agent-shogun</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔</text></svg>">
 </head>
 <body>
     <header>
         <div class="header-title">
-            <h1>戦況報告</h1>
+            <h1 data-i18n="header.title">戦況報告</h1>
         </div>
         <div class="header-info">
             <div class="last-updated">
-                最終更新: <span id="last-updated">-</span>
+                <span data-i18n="header.lastUpdated">最終更新:</span> <span id="last-updated">-</span>
             </div>
             <div class="auto-refresh">
                 <label>
                     <input type="checkbox" id="auto-refresh" checked>
-                    自動更新 (5秒)
+                    <span data-i18n="header.autoRefresh">自動更新 (5秒)</span>
                 </label>
+            </div>
+            <div class="lang-switcher">
+                <button class="lang-btn" data-lang="ja">日本語</button>
+                <button class="lang-btn" data-lang="en">English</button>
             </div>
         </div>
     </header>
@@ -32,18 +36,19 @@
         <div class="command-container">
             <div class="command-header">
                 <span class="command-icon">📜</span>
-                <h2>上様へのご下命</h2>
+                <h2 data-i18n="command.title">上様へのご下命</h2>
             </div>
             <div class="command-form">
                 <textarea
                     id="command-text"
                     class="command-textarea"
                     placeholder="ご命令をお書きください..."
+                    data-i18n-placeholder="command.placeholder"
                     rows="2"
                 ></textarea>
                 <button id="command-submit" class="command-button">
                     <span class="button-icon">⚔</span>
-                    出陣！
+                    <span data-i18n="command.submit">出陣！</span>
                 </button>
             </div>
             <div id="command-feedback" class="command-feedback" aria-live="polite"></div>
@@ -56,29 +61,30 @@
             <div class="shogun-output-header">
                 <div class="shogun-title">
                     <span class="shogun-icon">🏯</span>
-                    <h2>将軍 進行状況</h2>
+                    <h2 data-i18n="shogun.title">将軍 進行状況</h2>
                 </div>
                 <div class="shogun-controls">
                     <button id="shogun-refresh" class="btn-shogun-refresh">
-                        <span>🔄</span> 更新
+                        <span>🔄</span> <span data-i18n="shogun.refresh">更新</span>
                     </button>
                     <label class="shogun-auto-refresh">
                         <input type="checkbox" id="shogun-auto-refresh" checked>
-                        自動更新
+                        <span data-i18n="shogun.autoRefresh">自動更新</span>
                     </label>
                     <button id="karo-status-badge" class="karo-badge badge-idle"
-                            title="クリックで家老ターミナル表示/非表示">
-                        📋 家老: <span id="karo-status-text">待機中</span>
+                            title="クリックで家老ターミナル表示/非表示"
+                            data-i18n-title="karo.badgeTitle">
+                        📋 <span data-i18n="karo.label">家老:</span> <span id="karo-status-text" data-i18n="karo.idle">待機中</span>
                     </button>
                 </div>
             </div>
-            <pre id="shogun-terminal" class="shogun-terminal">読込中...</pre>
+            <pre id="shogun-terminal" class="shogun-terminal"><span data-i18n="shogun.loading">読込中...</span></pre>
             <div id="karo-output-collapse" class="karo-collapse" aria-expanded="false">
                 <div class="karo-collapse-header">
-                    <h3>📋 家老 進行状況</h3>
-                    <button id="karo-collapse-close" class="btn-karo-close">▲ 閉じる</button>
+                    <h3><span class="section-icon">📋</span> <span data-i18n="karo.title">家老 進行状況</span></h3>
+                    <button id="karo-collapse-close" class="btn-karo-close" data-i18n="karo.close">▲ 閉じる</button>
                 </div>
-                <pre id="karo-terminal" class="karo-terminal">読込中...</pre>
+                <pre id="karo-terminal" class="karo-terminal"><span data-i18n="karo.loading">読込中...</span></pre>
             </div>
         </div>
     </section>
@@ -86,43 +92,43 @@
     <main>
         <!-- 要対応 -->
         <section id="action-required" class="panel panel-danger">
-            <h2>🚨 要対応</h2>
+            <h2><span class="section-icon">🚨</span> <span data-i18n="section.actionRequired">要対応</span></h2>
             <div class="content"></div>
         </section>
 
         <!-- 進行中 -->
         <section id="in-progress" class="panel panel-info">
-            <h2>⚔ 進行中</h2>
+            <h2><span class="section-icon">⚔</span> <span data-i18n="section.inProgress">進行中</span></h2>
             <div class="content"></div>
         </section>
 
         <!-- 本日の戦果 -->
         <section id="completed-today" class="panel panel-success">
-            <h2>🏆 本日の戦果</h2>
+            <h2><span class="section-icon">🏆</span> <span data-i18n="section.completedToday">本日の戦果</span></h2>
             <div class="content"></div>
         </section>
 
         <!-- スキル化候補 -->
         <section id="skill-candidates" class="panel panel-warning">
-            <h2>🎯 スキル化候補</h2>
+            <h2><span class="section-icon">🎯</span> <span data-i18n="section.skillCandidates">スキル化候補</span></h2>
             <div class="content"></div>
         </section>
 
         <!-- 生成されたスキル -->
         <section id="generated-skills" class="panel panel-default">
-            <h2>📜 生成されたスキル</h2>
+            <h2><span class="section-icon">📜</span> <span data-i18n="section.generatedSkills">生成されたスキル</span></h2>
             <div class="content"></div>
         </section>
 
         <!-- 待機中 -->
         <section id="waiting" class="panel panel-default">
-            <h2>⏳ 待機中</h2>
+            <h2><span class="section-icon">⏳</span> <span data-i18n="section.waiting">待機中</span></h2>
             <div class="content"></div>
         </section>
 
         <!-- 伺い事項 -->
         <section id="inquiries" class="panel panel-default">
-            <h2>❓ 伺い事項</h2>
+            <h2><span class="section-icon">❓</span> <span data-i18n="section.inquiries">伺い事項</span></h2>
             <div class="content"></div>
         </section>
     </main>
@@ -133,13 +139,13 @@
         <div class="modal-container">
             <header class="modal-header">
                 <h2 id="modal-title">足軽1 進行状況</h2>
-                <button class="modal-close" data-close-modal aria-label="閉じる">&times;</button>
+                <button class="modal-close" data-close-modal aria-label="閉じる" data-i18n-aria-label="modal.close">&times;</button>
             </header>
             <div class="modal-body">
-                <pre id="modal-output" class="terminal-output">読込中...</pre>
+                <pre id="modal-output" class="terminal-output"><span data-i18n="modal.loading">読込中...</span></pre>
             </div>
             <footer class="modal-footer">
-                <button id="modal-refresh" class="btn-refresh">更新</button>
+                <button id="modal-refresh" class="btn-refresh" data-i18n="modal.refresh">更新</button>
             </footer>
         </div>
     </div>
@@ -149,19 +155,20 @@
         <div class="modal-overlay" data-close-skill-modal></div>
         <div class="modal-container skill-modal-container">
             <header class="modal-header">
-                <h2>🎯 スキル化候補一覧</h2>
-                <button class="modal-close" data-close-skill-modal aria-label="閉じる">&times;</button>
+                <h2><span class="section-icon">🎯</span> <span data-i18n="skill.modalTitle">スキル化候補一覧</span></h2>
+                <button class="modal-close" data-close-skill-modal aria-label="閉じる" data-i18n-aria-label="modal.close">&times;</button>
             </header>
             <div class="modal-body">
-                <div id="skill-modal-content" class="skill-modal-content">読込中...</div>
+                <div id="skill-modal-content" class="skill-modal-content"><span data-i18n="modal.loading">読込中...</span></div>
             </div>
         </div>
     </div>
 
     <footer>
-        <p>multi-agent-shogun-gui v2.0.0 — 戦国AIオーケストレーション</p>
+        <p>multi-agent-shogun-gui v2.0.0 — <span data-i18n="footer.text">戦国AIオーケストレーション</span></p>
     </footer>
 
+    <script src="/static/i18n.js"></script>
     <script src="/static/app.js"></script>
 </body>
 </html>

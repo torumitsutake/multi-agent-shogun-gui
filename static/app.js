@@ -88,14 +88,14 @@ function renderActionRequired(items, skillCandidates) {
         ? `<div class="skill-badge-container">
                <button class="skill-badge-button" id="skill-badge-btn">
                    <span class="skill-badge-icon">🔔</span>
-                   <span class="skill-badge-text">スキル化候補 ${pendingSkills.length}件</span>
-                   <span class="skill-badge-status">【承認待ち】</span>
+                   <span class="skill-badge-text">${t('skill.badge')} ${t('skill.badgeCount').replace('{N}', pendingSkills.length)}</span>
+                   <span class="skill-badge-status">${t('skill.badgeStatus')}</span>
                </button>
            </div>`
         : '';
 
     if ((!items || items.length === 0) && pendingSkills.length === 0) {
-        container.innerHTML = '<div class="empty">なし</div>';
+        container.innerHTML = '<div class="empty">' + t('empty.none') + '</div>';
         return;
     }
 
@@ -104,7 +104,7 @@ function renderActionRequired(items, skillCandidates) {
             <div class="action-item-header">
                 <h3>${escapeHtml(item.title)}</h3>
                 <button class="btn-action-delete" data-title="${escapeHtml(item.title)}" data-index="${index}"
-                        title="この項目の削除を将軍に指示">🗑</button>
+                        title="${t('action.deleteTitle')}">🗑</button>
             </div>
             <div class="action-content">${renderSimpleMarkdown(item.content)}</div>
         </div>
@@ -155,7 +155,7 @@ function extractAshigaruId(workerName) {
 function renderInProgress(items) {
     const container = document.querySelector('#in-progress .content');
     if (!items || items.length === 0) {
-        container.innerHTML = '<div class="empty">なし</div>';
+        container.innerHTML = '<div class="empty">' + t('empty.none') + '</div>';
         return;
     }
 
@@ -163,10 +163,10 @@ function renderInProgress(items) {
         <table>
             <thead>
                 <tr>
-                    <th>担当</th>
-                    <th>任務</th>
-                    <th>戦場</th>
-                    <th>状態</th>
+                    <th>${t('table.worker')}</th>
+                    <th>${t('table.task')}</th>
+                    <th>${t('table.project')}</th>
+                    <th>${t('table.status')}</th>
                 </tr>
             </thead>
             <tbody>
@@ -175,11 +175,11 @@ function renderInProgress(items) {
                     const workerName = item['担当'] || item['足軽'] || item.worker || '-';
                     const taskName = item['任務'] || item['タスク'] || item.task || '-';
                     const projectName = item['プロジェクト'] || item['戦場'] || item.project || '-';
-                    const statusText = item['状態'] || item.status || '戦闘中';
+                    const statusText = item['状態'] || item.status || t('table.defaultStatus');
                     const ashigaruId = extractAshigaruId(workerName);
                     const dataAttr = ashigaruId ? `data-ashigaru-id="${ashigaruId}"` : '';
                     return `
-                    <tr ${dataAttr} title="${ashigaruId ? 'クリックで詳細表示' : ''}">
+                    <tr ${dataAttr} title="${ashigaruId ? t('table.clickDetail') : ''}">
                         <td>${escapeHtml(workerName)}</td>
                         <td>${escapeHtml(taskName)}</td>
                         <td>${escapeHtml(projectName)}</td>
@@ -201,7 +201,7 @@ function renderInProgress(items) {
 function renderCompletedToday(items) {
     const container = document.querySelector('#completed-today .content');
     if (!items || items.length === 0) {
-        container.innerHTML = '<div class="empty">なし</div>';
+        container.innerHTML = '<div class="empty">' + t('empty.none') + '</div>';
         return;
     }
 
@@ -209,10 +209,10 @@ function renderCompletedToday(items) {
         <table>
             <thead>
                 <tr>
-                    <th>時刻</th>
-                    <th>戦場</th>
-                    <th>任務</th>
-                    <th>結果</th>
+                    <th>${t('table.time')}</th>
+                    <th>${t('table.project')}</th>
+                    <th>${t('table.task')}</th>
+                    <th>${t('table.result')}</th>
                 </tr>
             </thead>
             <tbody>
@@ -249,14 +249,14 @@ function renderSkillCandidates(items) {
  */
 function renderSkillModalContent(items) {
     if (!items || items.length === 0) {
-        return '<div class="empty">スキル化候補はありません</div>';
+        return '<div class="empty">' + t('skill.empty') + '</div>';
     }
 
     const cards = items.map(item => {
         const status = item.status || '承認待ち';
         const isPending = status === '承認待ち';
-        const description = item.description || '説明なし';
-        const source = item.source || item.discovered_from || '不明';
+        const description = item.description || t('skill.noDescription');
+        const source = item.source || item.discovered_from || t('skill.unknownSource');
         const generality = item.generality || '';
 
         return `
@@ -264,22 +264,22 @@ function renderSkillModalContent(items) {
             <div class="skill-card-header">
                 <span class="skill-card-icon">📜</span>
                 <h3 class="skill-card-name">${escapeHtml(item.name)}</h3>
-                ${isPending ? '<span class="skill-pending-badge">🔔 承認待ち</span>' : ''}
+                ${isPending ? '<span class="skill-pending-badge">' + t('skill.pendingBadge') + '</span>' : ''}
             </div>
             <div class="skill-card-body">
                 <p class="skill-card-description">${escapeHtml(description)}</p>
                 <div class="skill-card-meta">
-                    <span class="skill-card-source">📍 発見元: ${escapeHtml(source)}</span>
-                    ${generality ? `<span class="skill-card-generality">📊 汎用性: ${escapeHtml(generality)}</span>` : ''}
+                    <span class="skill-card-source">📍 ${t('skill.source')} ${escapeHtml(source)}</span>
+                    ${generality ? `<span class="skill-card-generality">📊 ${t('skill.generality')} ${escapeHtml(generality)}</span>` : ''}
                 </div>
             </div>
             ${isPending ? `
             <div class="skill-card-actions" id="skill-btns-${escapeHtml(item.name)}">
                 <button class="btn-approve btn-approve-skill" data-skill-name="${escapeHtml(item.name)}">
-                    ✅ 承認
+                    ✅ ${t('skill.approve')}
                 </button>
                 <button class="btn-reject btn-reject-skill" data-skill-name="${escapeHtml(item.name)}">
-                    ❌ 否認
+                    ❌ ${t('skill.reject')}
                 </button>
             </div>
             ` : ''}
@@ -296,7 +296,7 @@ function renderSkillModalContent(items) {
 function renderGeneratedSkills(items) {
     const container = document.querySelector('#generated-skills .content');
     if (!items || items.length === 0) {
-        container.innerHTML = '<div class="empty">なし</div>';
+        container.innerHTML = '<div class="empty">' + t('empty.none') + '</div>';
         return;
     }
 
@@ -305,8 +305,8 @@ function renderGeneratedSkills(items) {
             <h3>${escapeHtml(item.name)}</h3>
             <div class="description">${escapeHtml(item.description || '')}</div>
             <div class="meta">
-                ${item.languages ? `対応言語: ${escapeHtml(item.languages)}` : ''}
-                ${item.created_at ? ` | 生成日: ${escapeHtml(item.created_at)}` : ''}
+                ${item.languages ? `${t('skill.supportedLangs')} ${escapeHtml(item.languages)}` : ''}
+                ${item.created_at ? ` | ${t('skill.createdAt')} ${escapeHtml(item.created_at)}` : ''}
             </div>
         </div>
     `).join('');
@@ -318,7 +318,7 @@ function renderGeneratedSkills(items) {
 function renderWaiting(items) {
     const container = document.querySelector('#waiting .content');
     if (!items || items.length === 0) {
-        container.innerHTML = '<div class="empty">なし</div>';
+        container.innerHTML = '<div class="empty">' + t('empty.none') + '</div>';
         return;
     }
 
@@ -331,7 +331,7 @@ function renderWaiting(items) {
 function renderInquiries(items) {
     const container = document.querySelector('#inquiries .content');
     if (!items || items.length === 0) {
-        container.innerHTML = '<div class="empty">なし</div>';
+        container.innerHTML = '<div class="empty">' + t('empty.none') + '</div>';
         return;
     }
 
@@ -404,10 +404,10 @@ function openModal(ashigaruId) {
 
     // タイトルを設定
     const ashigaruNum = ashigaruId.replace('ashigaru', '');
-    title.textContent = `足軽${ashigaruNum} 進行状況`;
+    title.textContent = t('modal.ashigaruTitle').replace('{N}', ashigaruNum);
 
     // ローディング状態
-    output.textContent = '読込中...';
+    output.textContent = t('modal.loading');
     output.classList.add('loading');
     output.classList.remove('error');
 
@@ -444,10 +444,10 @@ async function fetchAshigaruOutput(ashigaruId) {
         output.classList.remove('loading');
 
         if (data.error) {
-            output.textContent = `エラー: ${data.error}`;
+            output.textContent = `${t('modal.error')} ${data.error}`;
             output.classList.add('error');
         } else if (!data.output || data.output.trim() === '') {
-            output.textContent = '（出力なし）';
+            output.textContent = t('modal.noOutput');
         } else {
             output.textContent = data.output;
             output.classList.remove('error');
@@ -458,7 +458,7 @@ async function fetchAshigaruOutput(ashigaruId) {
         console.error('Failed to fetch ashigaru output:', error);
         output.classList.remove('loading');
         output.classList.add('error');
-        output.textContent = `取得失敗: ${error.message}`;
+        output.textContent = `${t('modal.fetchFailed')} ${error.message}`;
     }
 }
 
@@ -499,7 +499,7 @@ function initModalEvents() {
     document.getElementById('modal-refresh').addEventListener('click', () => {
         if (currentAshigaruId) {
             const output = document.getElementById('modal-output');
-            output.textContent = '更新中...';
+            output.textContent = t('modal.updating');
             output.classList.add('loading');
             output.classList.remove('error');
             fetchAshigaruOutput(currentAshigaruId);
@@ -578,9 +578,9 @@ async function sendCommand(command) {
 async function handleApproval(title, btnContainer) {
     const result = await sendCommand(`${title}を承認する`);
     if (result.success) {
-        btnContainer.innerHTML = '<span class="btn-sent btn-sent-approved">✅ 承認済み</span>';
+        btnContainer.innerHTML = '<span class="btn-sent btn-sent-approved">✅ ' + t('skill.approved') + '</span>';
     } else {
-        btnContainer.innerHTML += `<span class="btn-sent-error">送信失敗: ${escapeHtml(result.error || '不明')}</span>`;
+        btnContainer.innerHTML += `<span class="btn-sent-error">${t('skill.sendFailed')} ${escapeHtml(result.error || t('skill.unknownSource'))}</span>`;
     }
 }
 
@@ -599,9 +599,9 @@ async function handleRejection(title, btnContainer) {
             : `${title}を否認する`;
         const result = await sendCommand(message);
         if (result.success) {
-            btnContainer.innerHTML = '<span class="btn-sent btn-sent-rejected">❌ 否認済み</span>';
+            btnContainer.innerHTML = '<span class="btn-sent btn-sent-rejected">❌ ' + t('skill.rejected') + '</span>';
         } else {
-            btnContainer.innerHTML += `<span class="btn-sent-error">送信失敗: ${escapeHtml(result.error || '不明')}</span>`;
+            btnContainer.innerHTML += `<span class="btn-sent-error">${t('skill.sendFailed')} ${escapeHtml(result.error || t('skill.unknownSource'))}</span>`;
         }
         return;
     }
@@ -610,8 +610,8 @@ async function handleRejection(title, btnContainer) {
     const reasonContainer = document.createElement('div');
     reasonContainer.className = 'reject-reason-container';
     reasonContainer.innerHTML = `
-        <input type="text" class="reject-reason-input" placeholder="否認理由（省略可）" />
-        <button class="btn-reject-confirm">否認を送信</button>
+        <input type="text" class="reject-reason-input" placeholder="${t('skill.rejectReason')}" />
+        <button class="btn-reject-confirm">${t('skill.rejectConfirm')}</button>
     `;
     btnContainer.appendChild(reasonContainer);
 
@@ -635,17 +635,17 @@ async function handleRejection(title, btnContainer) {
  * 要対応項目の削除ボタン押下時の処理
  */
 async function handleActionDelete(title, btn) {
-    if (!confirm('この要対応項目の削除を将軍に指示しますか？')) {
+    if (!confirm(t('action.deleteConfirm'))) {
         return;
     }
     btn.disabled = true;
-    btn.textContent = '送信中...';
+    btn.textContent = t('action.sending');
     const result = await sendCommand(`要対応の「${title}」を削除せよ`);
     if (result.success) {
-        btn.textContent = '✓ 送信済み';
+        btn.textContent = t('action.sent');
         btn.classList.add('btn-delete-sent');
     } else {
-        btn.textContent = '× 失敗';
+        btn.textContent = t('action.failed');
         btn.classList.add('btn-delete-error');
         btn.disabled = false;
     }
@@ -678,25 +678,25 @@ function initCommandInput() {
     submitBtn.addEventListener('click', async () => {
         const command = textarea.value.trim();
         if (!command) {
-            showCommandFeedback('ご命令をお書きください', false);
+            showCommandFeedback(t('command.emptyWarning'), false);
             return;
         }
 
         // ボタンを無効化
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="button-icon">⏳</span> 送信中...';
+        submitBtn.innerHTML = '<span class="button-icon">⏳</span> ' + t('command.sending');
 
         const result = await sendCommand(command);
 
         // ボタンを復元
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<span class="button-icon">⚔</span> 出陣！';
+        submitBtn.innerHTML = '<span class="button-icon">⚔</span> ' + t('command.submit');
 
         if (result.success) {
-            showCommandFeedback('ご下命を将軍にお伝えいたしました', true);
+            showCommandFeedback(t('command.success'), true);
             textarea.value = '';
         } else {
-            showCommandFeedback(`送信失敗: ${result.error || '不明なエラー'}`, false);
+            showCommandFeedback(`${t('command.failure')} ${result.error || t('skill.unknownSource')}`, false);
         }
     });
 
@@ -731,10 +731,10 @@ async function fetchShogunOutput() {
         terminal.classList.remove('loading');
 
         if (data.error) {
-            terminal.textContent = `エラー: ${data.error}`;
+            terminal.textContent = `${t('shogun.error')} ${data.error}`;
             terminal.classList.add('error');
         } else if (!data.output || data.output.trim() === '') {
-            terminal.textContent = '（出力なし）';
+            terminal.textContent = t('shogun.noOutput');
             terminal.classList.remove('error');
         } else {
             // 行ごとに分割してハイライト処理
@@ -755,7 +755,7 @@ async function fetchShogunOutput() {
         console.error('Failed to fetch shogun output:', error);
         terminal.classList.remove('loading');
         terminal.classList.add('error');
-        terminal.textContent = `取得失敗: ${error.message}`;
+        terminal.textContent = `${t('shogun.fetchFailed')} ${error.message}`;
     }
 }
 
@@ -793,7 +793,7 @@ function initShogunOutput() {
     // 手動更新ボタン
     refreshBtn.addEventListener('click', () => {
         terminal.classList.add('loading');
-        terminal.textContent = '更新中...';
+        terminal.textContent = t('shogun.updating');
         fetchShogunOutput();
     });
 
@@ -823,20 +823,20 @@ async function fetchKaroOutput() {
         // バッジのステータス更新
         if (data.status === 'busy') {
             badge.className = 'karo-badge badge-busy';
-            statusText.textContent = '処理中';
+            statusText.textContent = t('karo.busy');
         } else {
             badge.className = 'karo-badge badge-idle';
-            statusText.textContent = '待機中';
+            statusText.textContent = t('karo.idle');
         }
 
         // ターミナル出力更新
         if (terminal) {
             terminal.classList.remove('loading');
             if (data.error) {
-                terminal.textContent = `エラー: ${data.error}`;
+                terminal.textContent = `${t('karo.error')} ${data.error}`;
                 terminal.classList.add('error');
             } else if (!data.output || data.output.trim() === '') {
-                terminal.textContent = '（出力なし）';
+                terminal.textContent = t('karo.noOutput');
             } else {
                 // 将軍と同じハイライト処理
                 const lines = data.output.split('\n');
@@ -855,7 +855,7 @@ async function fetchKaroOutput() {
         console.error('Failed to fetch karo output:', error);
         if (badge) {
             badge.className = 'karo-badge badge-idle';
-            statusText.textContent = '取得失敗';
+            statusText.textContent = t('karo.fetchFailed');
         }
     }
 }
