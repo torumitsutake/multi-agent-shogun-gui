@@ -203,13 +203,19 @@ def parse_completed_reports(section: str) -> list[dict]:
 def parse_skill_candidates(section: str) -> list[dict]:
     """スキル化候補をパース
 
-    dashboard.md 形式:
+    dashboard.md 形式（2パターン対応）:
+
+    パターン1（テーブル形式）:
     ### skill-name（新規）
     | 項目 | 内容 |
     |------|------|
     | 名前 | skill-name |
     | 説明 | 説明文 |
     | 発見元 | cmd_XXX |
+
+    パターン2（箇条書き形式）:
+    - **skill-name**（cmd_XXX / 発見元）— 説明文
+    - **skill-name**（cmd_XXX / 発見元）- 説明文
     """
     candidates = []
 
@@ -220,7 +226,7 @@ def parse_skill_candidates(section: str) -> list[dict]:
     if re.search(r"^\s*なし\s*$", main_section, re.MULTILINE):
         return []
 
-    # ### で始まるスキル名を探す（parse_generated_skills と同じ方式）
+    # パターン1: ### で始まるスキル名を探す（既存ロジック・後方互換）
     subsections = re.split(r"\n### ", main_section)
     for sub in subsections[1:]:
         lines = sub.strip().split("\n")
@@ -256,6 +262,28 @@ def parse_skill_candidates(section: str) -> list[dict]:
                         skill_info["generality"] = value
 
         candidates.append(skill_info)
+
+    # パターン2: 箇条書き形式のフォールバック（### 形式が見つからなかった場合）
+    if not candidates:
+        # - **name**（source）— description または - **name**（source）- description
+        # emダッシュ（—）とハイフン（-）の両方に対応
+        bullet_pattern = re.compile(r'^\s*-\s+\*\*(.+?)\*\*[（(](.+?)[）)]\s*[—\-]\s*(.+)$')
+
+        lines = main_section.split("\n")
+        for line in lines:
+            # 取り消し線のある行は除外（却下済み）
+            if "~~" in line:
+                continue
+
+            match = bullet_pattern.match(line)
+            if match:
+                skill_info = {
+                    "name": match.group(1).strip(),
+                    "source": match.group(2).strip(),
+                    "description": match.group(3).strip(),
+                    "status": "承認待ち",
+                }
+                candidates.append(skill_info)
 
     return candidates
 

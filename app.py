@@ -218,6 +218,72 @@ async def get_karo_output():
         raise HTTPException(status_code=500, detail="tmux not found")
 
 
+@app.get("/api/pane/ashigaru/status")
+async def get_ashigaru_status():
+    """全足軽ペインのステータスを取得する
+
+    Returns:
+        全8体の足軽の状態(busy/idle/unknown)を含むJSON
+    """
+    statuses = []
+
+    for pane_num in range(1, 9):
+        ashigaru_id = f"ashigaru{pane_num}"
+        target = f"multiagent:agents.{pane_num}"
+
+        try:
+            result = subprocess.run(
+                ["tmux", "capture-pane", "-t", target, "-p", "-S", "-50"],
+                capture_output=True,
+                text=True,
+                timeout=2
+            )
+
+            if result.returncode != 0:
+                statuses.append({
+                    "id": ashigaru_id,
+                    "num": pane_num,
+                    "status": "unknown"
+                })
+                continue
+
+            # ステータス判定ロジック（get_karo_output と同じ）
+            raw_output = result.stdout
+            last_lines = raw_output.strip().split('\n')[-5:]
+            last_text = '\n'.join(last_lines)
+
+            if 'esc to interrupt' in last_text:
+                status = "busy"
+            elif any(kw in last_text for kw in ['thinking', 'Thinking', 'Effecting',
+                     'Boondoggling', 'Puzzling', 'Calculating', 'Fermenting', 'Crunching']):
+                status = "busy"
+            elif any(line.strip().startswith('❯') for line in last_lines):
+                status = "idle"
+            else:
+                status = "busy"
+
+            statuses.append({
+                "id": ashigaru_id,
+                "num": pane_num,
+                "status": status
+            })
+
+        except subprocess.TimeoutExpired:
+            statuses.append({
+                "id": ashigaru_id,
+                "num": pane_num,
+                "status": "unknown"
+            })
+        except Exception:
+            statuses.append({
+                "id": ashigaru_id,
+                "num": pane_num,
+                "status": "unknown"
+            })
+
+    return {"statuses": statuses}
+
+
 @app.post("/api/command")
 async def send_command(request: CommandRequest):
     """将軍ペインに指示を送信する

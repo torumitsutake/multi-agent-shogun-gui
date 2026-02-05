@@ -10,6 +10,11 @@ let cachedSkillCandidates = []; // スキル候補データをキャッシュ
 let karoRefreshTimer = null;
 const KARO_REFRESH_INTERVAL = 5000;
 
+// 通知用の前回カウント
+let prevActionRequiredCount = null;
+let prevCompletedTodayCount = null;
+let notificationsEnabled = false;
+
 /**
  * ダッシュボードデータを取得
  */
@@ -239,16 +244,18 @@ function renderCompletedToday(items) {
 }
 
 /**
- * スキル化候補をキャッシュに保存（パネルセクションは非表示に）
+ * スキル化候補をキャッシュに保存（パネルセクションは折りたたみ）
  */
 function renderSkillCandidates(items) {
     // データをキャッシュ
     cachedSkillCandidates = items || [];
 
-    // パネルセクションを非表示に
+    // パネルセクションを折りたたみで非表示に
     const panel = document.getElementById('skill-candidates');
     if (panel) {
-        panel.style.display = 'none';
+        panel.classList.add('collapsed');
+        var header = panel.querySelector('.collapsible-header');
+        if (header) header.setAttribute('aria-expanded', 'false');
     }
 }
 
@@ -303,9 +310,24 @@ function renderSkillModalContent(items) {
  */
 function renderGeneratedSkills(items) {
     const container = document.querySelector('#generated-skills .content');
-    if (!items || items.length === 0) {
+    const section = document.getElementById('generated-skills');
+    const isEmpty = !items || items.length === 0;
+
+    if (isEmpty) {
         container.innerHTML = '<div class="empty">' + t('empty.none') + '</div>';
+        if (section) {
+            section.classList.add('collapsed');
+            var h = section.querySelector('.collapsible-header');
+            if (h) h.setAttribute('aria-expanded', 'false');
+        }
         return;
+    }
+
+    // 有内容時は展開
+    if (section) {
+        section.classList.remove('collapsed');
+        var h = section.querySelector('.collapsible-header');
+        if (h) h.setAttribute('aria-expanded', 'true');
     }
 
     container.innerHTML = items.map(item => `
@@ -325,9 +347,23 @@ function renderGeneratedSkills(items) {
  */
 function renderWaiting(items) {
     const container = document.querySelector('#waiting .content');
-    if (!items || items.length === 0) {
+    const section = document.getElementById('waiting');
+    const isEmpty = !items || items.length === 0;
+
+    if (isEmpty) {
         container.innerHTML = '<div class="empty">' + t('empty.none') + '</div>';
+        if (section) {
+            section.classList.add('collapsed');
+            var h = section.querySelector('.collapsible-header');
+            if (h) h.setAttribute('aria-expanded', 'false');
+        }
         return;
+    }
+
+    if (section) {
+        section.classList.remove('collapsed');
+        var h = section.querySelector('.collapsible-header');
+        if (h) h.setAttribute('aria-expanded', 'true');
     }
 
     container.innerHTML = `<ul>${items.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
@@ -338,9 +374,23 @@ function renderWaiting(items) {
  */
 function renderInquiries(items) {
     const container = document.querySelector('#inquiries .content');
-    if (!items || items.length === 0) {
+    const section = document.getElementById('inquiries');
+    const isEmpty = !items || items.length === 0;
+
+    if (isEmpty) {
         container.innerHTML = '<div class="empty">' + t('empty.none') + '</div>';
+        if (section) {
+            section.classList.add('collapsed');
+            var h = section.querySelector('.collapsible-header');
+            if (h) h.setAttribute('aria-expanded', 'false');
+        }
         return;
+    }
+
+    if (section) {
+        section.classList.remove('collapsed');
+        var h = section.querySelector('.collapsible-header');
+        if (h) h.setAttribute('aria-expanded', 'true');
     }
 
     container.innerHTML = `<ul>${items.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
@@ -381,6 +431,51 @@ async function updateDashboard() {
     renderGeneratedSkills(data.generated_skills);
     renderWaiting(data.waiting);
     renderInquiries(data.inquiries);
+
+    // 足軽ステータスバーを更新
+    fetchAshigaruStatus();
+
+    // ブラウザ通知チェック
+    checkAndNotify(data);
+}
+
+/**
+ * 足軽ステータスバーを更新
+ */
+async function fetchAshigaruStatus() {
+    const container = document.getElementById('ashigaru-status-bar');
+    if (!container) return;
+
+    try {
+        const response = await fetch('/api/pane/ashigaru/status');
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const statuses = data.statuses || [];
+
+        // 足軽アイコンを生成
+        const iconsHtml = statuses.map(ash => {
+            const statusClass = ash.status === 'busy' ? 'ashigaru-busy' :
+                               ash.status === 'idle' ? 'ashigaru-idle' : 'ashigaru-unknown';
+            const statusText = ash.status === 'busy' ? t('ashigaru.busy') :
+                              ash.status === 'idle' ? t('ashigaru.idle') : t('ashigaru.unknown');
+            const title = `${t('modal.ashigaruTitle').replace('{N}', ash.num)} - ${statusText}`;
+
+            return `
+                <div class="ashigaru-icon ${statusClass}" onclick="openModal('${ash.id}')" title="${escapeHtml(title)}">
+                    <span class="ashigaru-num">${ash.num}</span>
+                    <span class="ashigaru-status-dot"></span>
+                </div>
+            `;
+        }).join('');
+
+        container.innerHTML = iconsHtml;
+    } catch (error) {
+        console.error('Failed to fetch ashigaru status:', error);
+        container.innerHTML = '<div class="empty">' + t('empty.none') + '</div>';
+    }
 }
 
 /**
@@ -553,6 +648,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 本日の戦果折りたたみ初期化
     initCompletedCollapse();
+
+    // 汎用折りたたみセクション初期化
+    initCollapsibleSections();
+
+    // コマンド履歴初期化
+    initCommandHistory();
+
+    // ブラウザ通知初期化
+    initNotifications();
 });
 
 // ===== Command Input Functions =====
@@ -705,6 +809,8 @@ function initCommandInput() {
 
         if (result.success) {
             showCommandFeedback(t('command.success'), true);
+            saveCommandHistory(command);
+            renderCommandHistory();
             textarea.value = '';
         } else {
             showCommandFeedback(`${t('command.failure')} ${result.error || t('skill.unknownSource')}`, false);
@@ -1014,4 +1120,217 @@ function initSkillModal() {
 
     // aria-hidden を初期設定
     modal.setAttribute('aria-hidden', 'true');
+}
+
+// ===== Collapsible Sections =====
+
+/**
+ * 汎用折りたたみセクションの初期化
+ */
+function initCollapsibleSections() {
+    document.querySelectorAll('.collapsible-header').forEach(function(header) {
+        header.addEventListener('click', function() {
+            var section = header.closest('.collapsible-section');
+            if (!section) return;
+            var isCollapsed = section.classList.contains('collapsed');
+            if (isCollapsed) {
+                section.classList.remove('collapsed');
+                header.setAttribute('aria-expanded', 'true');
+            } else {
+                section.classList.add('collapsed');
+                header.setAttribute('aria-expanded', 'false');
+            }
+        });
+    });
+}
+
+// ===== Command History Functions =====
+
+/**
+ * コマンド履歴をlocalStorageに保存
+ */
+function saveCommandHistory(text) {
+    try {
+        var history = JSON.parse(localStorage.getItem('shogun-gui-command-history') || '[]');
+        history.unshift({ text: text, timestamp: Date.now() });
+        if (history.length > 10) {
+            history = history.slice(0, 10);
+        }
+        localStorage.setItem('shogun-gui-command-history', JSON.stringify(history));
+    } catch (e) { /* localStorage unavailable */ }
+}
+
+/**
+ * 相対時間を計算
+ */
+function getRelativeTime(timestamp) {
+    var diff = Date.now() - timestamp;
+    var seconds = Math.floor(diff / 1000);
+    var minutes = Math.floor(seconds / 60);
+    var hours = Math.floor(minutes / 60);
+    var days = Math.floor(hours / 24);
+
+    if (minutes < 1) return t('command.justNow');
+    if (hours < 1) return t('command.minutesAgo').replace('{N}', minutes);
+    if (days < 1) return t('command.hoursAgo').replace('{N}', hours);
+    return t('command.daysAgo').replace('{N}', days);
+}
+
+/**
+ * コマンド履歴をレンダリング
+ */
+function renderCommandHistory() {
+    var list = document.getElementById('command-history-list');
+    if (!list) return;
+
+    var history = [];
+    try {
+        history = JSON.parse(localStorage.getItem('shogun-gui-command-history') || '[]');
+    } catch (e) { /* localStorage unavailable */ }
+
+    if (history.length === 0) {
+        list.innerHTML = '<div class="command-history-empty">' + t('command.historyEmpty') + '</div>';
+        return;
+    }
+
+    list.innerHTML = history.map(function(item) {
+        return '<div class="command-history-item" data-text="' + escapeHtml(item.text) + '">' +
+            '<span class="command-history-text">' + escapeHtml(item.text) + '</span>' +
+            '<span class="command-history-time">' + getRelativeTime(item.timestamp) + '</span>' +
+            '</div>';
+    }).join('');
+
+    // クリックで入力欄に再入力
+    list.querySelectorAll('.command-history-item').forEach(function(el) {
+        el.addEventListener('click', function() {
+            var textarea = document.getElementById('command-text');
+            if (textarea) {
+                textarea.value = el.getAttribute('data-text');
+                textarea.focus();
+            }
+        });
+    });
+}
+
+/**
+ * コマンド履歴を初期化
+ */
+function initCommandHistory() {
+    var wrapper = document.getElementById('command-history-wrapper');
+    var header = document.getElementById('command-history-header');
+    if (!wrapper || !header) return;
+
+    // 初回レンダリング
+    renderCommandHistory();
+
+    // トグル
+    header.addEventListener('click', function() {
+        wrapper.classList.toggle('collapsed');
+    });
+}
+
+// ===== Browser Notification Functions =====
+
+/**
+ * ブラウザ通知を初期化
+ */
+function initNotifications() {
+    var btn = document.getElementById('notification-toggle');
+    if (!btn) return;
+
+    // localStorageから設定復元
+    try {
+        notificationsEnabled = localStorage.getItem('shogun-gui-notifications-enabled') === 'true';
+    } catch (e) { /* localStorage unavailable */ }
+
+    updateNotificationButton();
+
+    btn.addEventListener('click', toggleNotifications);
+}
+
+/**
+ * 通知ボタンの見た目を更新
+ */
+function updateNotificationButton() {
+    var btn = document.getElementById('notification-toggle');
+    if (!btn) return;
+    if (notificationsEnabled) {
+        btn.textContent = '🔔';
+        btn.classList.add('active');
+        btn.classList.remove('inactive');
+    } else {
+        btn.textContent = '🔕';
+        btn.classList.remove('active');
+        btn.classList.add('inactive');
+    }
+}
+
+/**
+ * 通知ON/OFFトグル
+ */
+async function toggleNotifications() {
+    if (!notificationsEnabled) {
+        // OFF→ON: パーミッション要求
+        if (!('Notification' in window)) return;
+        var permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            notificationsEnabled = true;
+        }
+    } else {
+        notificationsEnabled = false;
+    }
+
+    try {
+        localStorage.setItem('shogun-gui-notifications-enabled', notificationsEnabled);
+    } catch (e) { /* localStorage unavailable */ }
+
+    updateNotificationButton();
+}
+
+/**
+ * データ変化をチェックして通知
+ */
+function checkAndNotify(data) {
+    if (!data) return;
+
+    var actionCount = (data.action_required || []).length;
+    var completedCount = (data.completed_today || []).length;
+
+    // 初回は初期化のみ（通知しない）
+    if (prevActionRequiredCount === null) {
+        prevActionRequiredCount = actionCount;
+        prevCompletedTodayCount = completedCount;
+        return;
+    }
+
+    if (notificationsEnabled) {
+        if (actionCount > prevActionRequiredCount) {
+            sendBrowserNotification(t('notification.title'), t('notification.actionRequired'));
+        }
+        if (completedCount > prevCompletedTodayCount) {
+            sendBrowserNotification(t('notification.title'), t('notification.taskCompleted'));
+        }
+    }
+
+    prevActionRequiredCount = actionCount;
+    prevCompletedTodayCount = completedCount;
+}
+
+/**
+ * ブラウザ通知を送信
+ */
+function sendBrowserNotification(title, body) {
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
+    if (!document.hidden) return; // タブがアクティブなら通知しない
+
+    var notification = new Notification(title, {
+        body: body,
+        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⚔</text></svg>'
+    });
+
+    notification.onclick = function() {
+        window.focus();
+        notification.close();
+    };
 }

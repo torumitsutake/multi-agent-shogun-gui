@@ -100,6 +100,23 @@
             'action.sent': '✓ 送信済み',
             'action.failed': '× 失敗',
 
+            'command.history': '最近のご下命',
+            'command.historyEmpty': '履歴なし',
+            'command.justNow': 'たった今',
+            'command.minutesAgo': '{N}分前',
+            'command.hoursAgo': '{N}時間前',
+            'command.daysAgo': '{N}日前',
+
+            'notification.enable': '通知',
+            'notification.actionRequired': '新しい要対応事項があります',
+            'notification.taskCompleted': 'タスクが完了しました',
+            'notification.title': '戦況報告',
+
+            'ashigaru.statusBar': '足軽陣容',
+            'ashigaru.busy': '戦闘中',
+            'ashigaru.idle': '待機中',
+            'ashigaru.unknown': '不明',
+
             'footer.text': '戦国AIオーケストレーション'
         },
         en: {
@@ -194,6 +211,23 @@
             'action.sending': 'Sending...',
             'action.sent': '✓ Sent',
             'action.failed': '× Failed',
+
+            'command.history': 'Recent Orders',
+            'command.historyEmpty': 'No history',
+            'command.justNow': 'Just now',
+            'command.minutesAgo': '{N}m ago',
+            'command.hoursAgo': '{N}h ago',
+            'command.daysAgo': '{N}d ago',
+
+            'notification.enable': 'Notifications',
+            'notification.actionRequired': 'New action required',
+            'notification.taskCompleted': 'Task completed',
+            'notification.title': 'Battle Report',
+
+            'ashigaru.statusBar': 'Ashigaru Squad Status',
+            'ashigaru.busy': 'In Battle',
+            'ashigaru.idle': 'Idle',
+            'ashigaru.unknown': 'Unknown',
 
             'footer.text': 'Sengoku AI Orchestration'
         }

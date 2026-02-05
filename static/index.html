@@ -24,6 +24,7 @@
                     <span data-i18n="header.autoRefresh">自動更新 (5秒)</span>
                 </label>
             </div>
+            <button id="notification-toggle" class="notification-btn inactive" title="通知" data-i18n-title="notification.enable">🔕</button>
             <div class="lang-switcher">
                 <button class="lang-btn" data-lang="ja">日本語</button>
                 <button class="lang-btn" data-lang="en">English</button>
@@ -52,6 +53,13 @@
                 </button>
             </div>
             <div id="command-feedback" class="command-feedback" aria-live="polite"></div>
+            <div id="command-history-wrapper" class="collapsed">
+                <div id="command-history-header">
+                    <span data-i18n="command.history">最近のご下命</span>
+                    <span class="collapse-indicator">▼</span>
+                </div>
+                <div id="command-history-list"></div>
+            </div>
         </div>
     </section>
 
@@ -89,6 +97,15 @@
         </div>
     </section>
 
+    <!-- 足軽ステータスバー -->
+    <section id="ashigaru-status" class="panel">
+        <h2>
+            <span class="section-icon">⚔</span>
+            <span data-i18n="ashigaru.statusBar">足軽陣容</span>
+        </h2>
+        <div id="ashigaru-status-bar" class="ashigaru-bar"></div>
+    </section>
+
     <main>
         <!-- 要対応 -->
         <section id="action-required" class="panel panel-danger">
@@ -114,27 +131,43 @@
         </section>
 
         <!-- スキル化候補 -->
-        <section id="skill-candidates" class="panel panel-warning">
-            <h2><span class="section-icon">🎯</span> <span data-i18n="section.skillCandidates">スキル化候補</span></h2>
-            <div class="content"></div>
+        <section id="skill-candidates" class="panel panel-warning collapsible-section collapsed">
+            <h2 class="collapsible-header" style="cursor: pointer;" aria-expanded="false">
+                <span class="section-icon">🎯</span>
+                <span data-i18n="section.skillCandidates">スキル化候補</span>
+                <span class="collapse-indicator">▼</span>
+            </h2>
+            <div class="content collapsible-content"></div>
         </section>
 
         <!-- 生成されたスキル -->
-        <section id="generated-skills" class="panel panel-default">
-            <h2><span class="section-icon">📜</span> <span data-i18n="section.generatedSkills">生成されたスキル</span></h2>
-            <div class="content"></div>
+        <section id="generated-skills" class="panel panel-default collapsible-section collapsed">
+            <h2 class="collapsible-header" style="cursor: pointer;" aria-expanded="false">
+                <span class="section-icon">📜</span>
+                <span data-i18n="section.generatedSkills">生成されたスキル</span>
+                <span class="collapse-indicator">▼</span>
+            </h2>
+            <div class="content collapsible-content"></div>
         </section>
 
         <!-- 待機中 -->
-        <section id="waiting" class="panel panel-default">
-            <h2><span class="section-icon">⏳</span> <span data-i18n="section.waiting">待機中</span></h2>
-            <div class="content"></div>
+        <section id="waiting" class="panel panel-default collapsible-section collapsed">
+            <h2 class="collapsible-header" style="cursor: pointer;" aria-expanded="false">
+                <span class="section-icon">⏳</span>
+                <span data-i18n="section.waiting">待機中</span>
+                <span class="collapse-indicator">▼</span>
+            </h2>
+            <div class="content collapsible-content"></div>
         </section>
 
         <!-- 伺い事項 -->
-        <section id="inquiries" class="panel panel-default">
-            <h2><span class="section-icon">❓</span> <span data-i18n="section.inquiries">伺い事項</span></h2>
-            <div class="content"></div>
+        <section id="inquiries" class="panel panel-default collapsible-section collapsed">
+            <h2 class="collapsible-header" style="cursor: pointer;" aria-expanded="false">
+                <span class="section-icon">❓</span>
+                <span data-i18n="section.inquiries">伺い事項</span>
+                <span class="collapse-indicator">▼</span>
+            </h2>
+            <div class="content collapsible-content"></div>
         </section>
     </main>
 

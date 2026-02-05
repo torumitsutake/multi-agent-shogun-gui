@@ -2062,6 +2062,183 @@ footer p::before {
     border-color: rgba(196, 30, 58, 0.5);
 }
 
+/* ===== Collapsible Sections ===== */
+.collapsible-section .collapsible-header {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.collapsible-section .collapsible-content {
+    transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+    max-height: 500px;
+    overflow-y: auto;
+}
+.collapsible-section.collapsed .collapsible-content {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+.collapsible-section.collapsed .collapse-indicator {
+    transform: rotate(0deg);
+}
+.collapsible-section:not(.collapsed) .collapse-indicator {
+    transform: rotate(180deg);
+}
+
+/* ===== Command History ===== */
+#command-history-wrapper {
+    margin-top: 1rem;
+    border-top: 1px solid var(--border-color);
+    padding-top: 0.75rem;
+}
+#command-history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    padding: 0.5rem 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-family: var(--font-display);
+    user-select: none;
+    transition: color var(--transition-fast);
+}
+#command-history-header:hover {
+    color: var(--gold);
+}
+#command-history-list {
+    max-height: 300px;
+    overflow-y: auto;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+#command-history-wrapper.collapsed #command-history-list {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+}
+#command-history-wrapper.collapsed .collapse-indicator {
+    transform: rotate(0deg);
+}
+#command-history-wrapper:not(.collapsed) .collapse-indicator {
+    transform: rotate(180deg);
+}
+.command-history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 1rem;
+    margin: 0.25rem 0;
+    background: rgba(22, 33, 62, 0.6);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    gap: 1rem;
+}
+.command-history-item:hover {
+    background: rgba(212, 175, 55, 0.1);
+    border-color: var(--gold);
+    transform: translateX(4px);
+}
+.command-history-text {
+    flex: 1;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.command-history-time {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.command-history-empty {
+    text-align: center;
+    padding: 1rem;
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 0.85rem;
+}
+
+/* ===== Notification Button ===== */
+.notification-btn {
+    font-size: 1.2rem;
+    padding: 0.35rem 0.6rem;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    line-height: 1;
+}
+.notification-btn:hover {
+    border-color: var(--gold);
+    background: rgba(212, 175, 55, 0.1);
+}
+.notification-btn.active {
+    border-color: var(--gold);
+    background: rgba(212, 175, 55, 0.15);
+    box-shadow: 0 0 10px var(--glow-gold);
+}
+.notification-btn.inactive {
+    opacity: 0.5;
+}
+
+/* ===== Ashigaru Status Bar ===== */
+.ashigaru-bar {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding: 0.5rem;
+}
+.ashigaru-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+    min-width: 60px;
+}
+.ashigaru-icon:hover {
+    border-color: var(--gold);
+    background: rgba(212, 175, 55, 0.1);
+}
+.ashigaru-num {
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--text-primary);
+}
+.ashigaru-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-top: 4px;
+}
+.ashigaru-busy .ashigaru-status-dot {
+    background: var(--crimson);
+    animation: pulse-dot 1.5s infinite;
+}
+.ashigaru-idle .ashigaru-status-dot {
+    background: #666;
+}
+.ashigaru-unknown .ashigaru-status-dot {
+    background: #444;
+    opacity: 0.5;
+}
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+}
+
 /* ===== Language Switcher ===== */
 .lang-switcher {
     display: flex;
