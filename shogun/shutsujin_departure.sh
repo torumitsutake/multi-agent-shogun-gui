@@ -251,6 +251,13 @@ if [ "$CLEAN_MODE" = true ]; then
         fi
     fi
 
+    # 既存の dashboard.md 判定の後に追加
+    if [ -f "./queue/shogun_to_karo.yaml" ]; then
+        if grep -q "id: cmd_" "./queue/shogun_to_karo.yaml" 2>/dev/null; then
+            NEED_BACKUP=true
+        fi
+    fi
+
     if [ "$NEED_BACKUP" = true ]; then
         mkdir -p "$BACKUP_DIR" || true
         cp "./dashboard.md" "$BACKUP_DIR/" 2>/dev/null || true
@@ -296,55 +303,6 @@ status: idle
 result: null
 EOF
     done
-
-    # キューファイルリセット
-    cat > ./queue/shogun_to_karo.yaml << 'EOF'
-queue: []
-EOF
-
-    cat > ./queue/karo_to_ashigaru.yaml << 'EOF'
-assignments:
-  ashigaru1:
-    task_id: null
-    description: null
-    target_path: null
-    status: idle
-  ashigaru2:
-    task_id: null
-    description: null
-    target_path: null
-    status: idle
-  ashigaru3:
-    task_id: null
-    description: null
-    target_path: null
-    status: idle
-  ashigaru4:
-    task_id: null
-    description: null
-    target_path: null
-    status: idle
-  ashigaru5:
-    task_id: null
-    description: null
-    target_path: null
-    status: idle
-  ashigaru6:
-    task_id: null
-    description: null
-    target_path: null
-    status: idle
-  ashigaru7:
-    task_id: null
-    description: null
-    target_path: null
-    status: idle
-  ashigaru8:
-    task_id: null
-    description: null
-    target_path: null
-    status: idle
-EOF
 
     log_success "✅ 陣払い完了"
 else

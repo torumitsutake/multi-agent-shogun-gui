@@ -165,6 +165,13 @@ Layer 4: Session（揮発・コンテキスト内）
   tmux send-keys -t multiagent:0.0 Enter
   ```
 
+### send-keys到達確認（統一基準）
+- 送信後5秒待機 → `tmux capture-pane -t <target> -p | tail -8` で確認
+- **到達OKの証拠**: スピナー記号（⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏✻⠂✳）、「thinking」等のステータス、または送信メッセージ文字列が表示されている
+- **到達NGの証拠**: `❯` プロンプトが最終行に表示され、スピナーもメッセージもない
+- ⚠️ **`esc to interrupt` や `bypass permissions on` は常時表示であり、到達の証拠にならない！**
+- 未到達なら **1回だけ再送**。それ以上追わない（報告YAMLは書いてあるので未処理報告スキャンで発見される）
+
 ### 報告の流れ（割り込み防止設計）
 - **足軽→家老**: 報告YAML記入 + send-keys で家老を起こす（**必須**）
 - **家老→将軍/殿**: dashboard.md 更新のみ（send-keys **禁止**）
@@ -184,6 +191,12 @@ dashboard.md                      # 人間用ダッシュボード
 
 **注意**: 各足軽には専用のタスクファイル（queue/tasks/ashigaru1.yaml 等）がある。
 これにより、足軽が他の足軽のタスクを誤って実行することを防ぐ。
+
+### タスクYAML status遷移ルール
+- `idle` → `assigned`（家老がタスク割当時）
+- `assigned` → `done`（足軽がタスク完了時）
+- `assigned` → `failed`（足軽がタスク失敗時）
+- **重要**: 足軽は自分のYAMLのstatusのみ更新可。他の足軽のYAMLは触るな。
 
 ### プロジェクト管理
 

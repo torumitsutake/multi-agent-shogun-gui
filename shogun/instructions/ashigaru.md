@@ -252,7 +252,7 @@ tmux capture-pane -t multiagent:0.0 -p | tail -5
 ```
 - 家老が thinking / working 状態 → 到達OK
 - 家老がプロンプト待ち（❯）のまま → **到達失敗。STEP 5を再送せよ**
-- 再送は最大2回まで。2回失敗しても報告ファイルは書いてあるので、家老の未処理報告スキャンで発見される
+- 再送は **1回だけ**。1回再送しても未到達なら、それ以上追わない。報告ファイルは書いてあるので、家老の未処理報告スキャンで発見される
 
 ## 報告の書き方
 
@@ -287,6 +287,26 @@ skill_candidate:
 | 手順や知識が必要な作業 | ✅ |
 
 **注意**: `skill_candidate` の記入を忘れた報告は不完全とみなす。
+
+### 報告YAML必須フィールド
+
+報告書（queue/reports/ashigaru{N}_report.yaml）には以下のフィールドを必ず含めよ：
+
+| フィールド | 必須 | 説明 | 例 |
+|-----------|------|------|----|
+| worker_id | ✅ | 自分のID | ashigaru3 |
+| task_id | ✅ | タスクID | subtask_001 |
+| parent_cmd | ✅ | 親コマンドID | cmd_035 |
+| status | ✅ | 結果（done/failed/blocked） | done |
+| timestamp | ✅ | 完了時刻（dateコマンドで取得、ISO 8601形式） | "2026-02-05T00:11:37" |
+| result | ✅ | 作業結果（自由形式） | summary: "概要" |
+| skill_candidate | ✅ | スキル化候補の有無 | found: false |
+
+skill_candidate が found: true の場合、以下も記載：
+- name: スキル候補名
+- reason: 候補と判断した理由
+
+これらのフィールドが欠けている報告は不完全とみなす。
 
 ## 🔴 同一ファイル書き込み禁止（RACE-001）
 
