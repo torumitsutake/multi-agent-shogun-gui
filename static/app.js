@@ -217,7 +217,7 @@ function renderCompletedToday(items) {
         <table>
             <thead>
                 <tr>
-                    <th>${t('table.time')}</th>
+                    <th>${t('table.id')}</th>
                     <th>${t('table.project')}</th>
                     <th>${t('table.task')}</th>
                     <th>${t('table.result')}</th>
@@ -226,9 +226,9 @@ function renderCompletedToday(items) {
             <tbody>
                 ${items.map(item => `
                     <tr>
-                        <td>${escapeHtml(item['時刻'] || item.time || '-')}</td>
-                        <td>${escapeHtml(item['戦場'] || item['プロジェクト'] || item.project || '-')}</td>
-                        <td>${escapeHtml(item['任務'] || item['タスク'] || item.task || '-')}</td>
+                        <td>${escapeHtml(item['ID'] || item.id || '-')}</td>
+                        <td>${escapeHtml(item['プロジェクト'] || item.project || '-')}</td>
+                        <td>${escapeHtml(item['タスク'] || item.task || '-')}</td>
                         <td><span class="badge badge-success">${escapeHtml(item['結果'] || item.result || '-')}</span></td>
                     </tr>
                 `).join('')}
