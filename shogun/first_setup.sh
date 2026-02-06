@@ -102,44 +102,32 @@ else
 
     # Ubuntu/Debian系かチェック
     if command -v apt-get &> /dev/null; then
-        if [ ! -t 0 ]; then
-            REPLY="Y"
-        else
-            read -p "  tmux をインストールしますか? [Y/n]: " REPLY
+        log_info "tmux をインストール中..."
+        if ! sudo -n apt-get update -qq 2>/dev/null; then
+            if ! sudo apt-get update -qq 2>/dev/null; then
+                log_error "sudo の実行に失敗しました。ターミナルから直接実行してください"
+                RESULTS+=("tmux: インストール失敗 (sudo失敗)")
+                HAS_ERROR=true
+            fi
         fi
-        REPLY=${REPLY:-Y}
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            log_info "tmux をインストール中..."
-            if ! sudo -n apt-get update -qq 2>/dev/null; then
-                if ! sudo apt-get update -qq 2>/dev/null; then
-                    log_error "sudo の実行に失敗しました。ターミナルから直接実行してください"
-                    RESULTS+=("tmux: インストール失敗 (sudo失敗)")
+
+        if [ "$HAS_ERROR" != true ]; then
+            if ! sudo -n apt-get install -y tmux 2>/dev/null; then
+                if ! sudo apt-get install -y tmux 2>/dev/null; then
+                    log_error "tmux のインストールに失敗しました"
+                    RESULTS+=("tmux: インストール失敗")
                     HAS_ERROR=true
                 fi
             fi
+        fi
 
-            if [ "$HAS_ERROR" != true ]; then
-                if ! sudo -n apt-get install -y tmux 2>/dev/null; then
-                    if ! sudo apt-get install -y tmux 2>/dev/null; then
-                        log_error "tmux のインストールに失敗しました"
-                        RESULTS+=("tmux: インストール失敗")
-                        HAS_ERROR=true
-                    fi
-                fi
-            fi
-
-            if command -v tmux &> /dev/null; then
-                TMUX_VERSION=$(tmux -V | awk '{print $2}')
-                log_success "tmux インストール完了 (v$TMUX_VERSION)"
-                RESULTS+=("tmux: インストール完了 (v$TMUX_VERSION)")
-            else
-                log_error "tmux のインストールに失敗しました"
-                RESULTS+=("tmux: インストール失敗")
-                HAS_ERROR=true
-            fi
+        if command -v tmux &> /dev/null; then
+            TMUX_VERSION=$(tmux -V | awk '{print $2}')
+            log_success "tmux インストール完了 (v$TMUX_VERSION)"
+            RESULTS+=("tmux: インストール完了 (v$TMUX_VERSION)")
         else
-            log_warn "tmux のインストールをスキップしました"
-            RESULTS+=("tmux: 未インストール (スキップ)")
+            log_error "tmux のインストールに失敗しました"
+            RESULTS+=("tmux: インストール失敗")
             HAS_ERROR=true
         fi
     else
@@ -214,28 +202,10 @@ else
         \. "$NVM_DIR/nvm.sh"
     else
         # nvm 自動インストール
-        if [ ! -t 0 ]; then
-            REPLY="Y"
-        else
-            read -p "  Node.js (nvm経由) をインストールしますか? [Y/n]: " REPLY
-        fi
-        REPLY=${REPLY:-Y}
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            log_info "nvm をインストール中..."
-            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-        else
-            log_warn "Node.js のインストールをスキップしました"
-            echo ""
-            echo "  手動でインストールする場合:"
-            echo "    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash"
-            echo "    source ~/.bashrc"
-            echo "    nvm install 20"
-            echo ""
-            RESULTS+=("Node.js: 未インストール (スキップ)")
-            HAS_ERROR=true
-        fi
+        log_info "nvm をインストール中..."
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+        export NVM_DIR="$HOME/.nvm"
+        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
     fi
 
     # nvm が利用可能なら Node.js をインストール
@@ -277,50 +247,118 @@ else
 fi
 
 # ============================================================
-# STEP 5: Claude Code CLI チェック
+# STEP 5: Claude Code CLI チェック（ネイティブ版）
+# ※ npm版は公式非推奨（deprecated）。ネイティブ版を使用する。
+#    Node.jsはMCPサーバー（npx経由）で引き続き必要。
 # ============================================================
 log_step "STEP 5: Claude Code CLI チェック"
 
+# ネイティブ版の既存インストールを検出するため、PATHに ~/.local/bin を含める
+export PATH="$HOME/.local/bin:$PATH"
+
+NEED_CLAUDE_INSTALL=false
+HAS_NPM_CLAUDE=false
+
 if command -v claude &> /dev/null; then
-    # バージョン取得を試みる
-    CLAUDE_VERSION=$(claude --version 2>/dev/null || echo "unknown")
-    log_success "Claude Code CLI がインストール済みです"
-    log_info "バージョン: $CLAUDE_VERSION"
-    RESULTS+=("Claude Code CLI: OK")
-else
-    log_warn "Claude Code CLI がインストールされていません"
-    echo ""
+    # claude コマンドは存在する → 実際に動くかチェック
+    CLAUDE_VERSION=$(claude --version 2>&1)
+    CLAUDE_PATH=$(which claude 2>/dev/null)
 
-    if command -v npm &> /dev/null; then
-        echo "  インストールコマンド:"
-        echo "     npm install -g @anthropic-ai/claude-code"
-        echo ""
-        if [ ! -t 0 ]; then
-            REPLY="Y"
-        else
-            read -p "  今すぐインストールしますか? [Y/n]: " REPLY
-        fi
-        REPLY=${REPLY:-Y}
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            log_info "Claude Code CLI をインストール中..."
-            npm install -g @anthropic-ai/claude-code
-
-            if command -v claude &> /dev/null; then
-                log_success "Claude Code CLI インストール完了"
-                RESULTS+=("Claude Code CLI: インストール完了")
+    if [ $? -eq 0 ] && [ "$CLAUDE_VERSION" != "unknown" ] && [[ "$CLAUDE_VERSION" != *"not found"* ]]; then
+        # 動作する claude が見つかった → npm版かネイティブ版かを判定
+        if echo "$CLAUDE_PATH" | grep -qi "npm\|node_modules\|AppData"; then
+            # npm版が動いている
+            HAS_NPM_CLAUDE=true
+            log_warn "npm版 Claude Code CLI が検出されました（公式非推奨）"
+            log_info "検出パス: $CLAUDE_PATH"
+            log_info "バージョン: $CLAUDE_VERSION"
+            echo ""
+            echo "  npm版は公式で非推奨（deprecated）となっています。"
+            echo "  ネイティブ版をインストールし、npm版はアンインストールすることを推奨します。"
+            echo ""
+            if [ ! -t 0 ]; then
+                REPLY="Y"
             else
-                log_error "インストールに失敗しました。パスを確認してください"
-                RESULTS+=("Claude Code CLI: インストール失敗")
-                HAS_ERROR=true
+                read -p "  ネイティブ版をインストールしますか? [Y/n]: " REPLY
+            fi
+            REPLY=${REPLY:-Y}
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                NEED_CLAUDE_INSTALL=true
+                # npm版のアンインストール案内
+                echo ""
+                log_info "先にnpm版をアンインストールしてください:"
+                if echo "$CLAUDE_PATH" | grep -qi "mnt/c\|AppData"; then
+                    echo "  Windows の PowerShell で:"
+                    echo "    npm uninstall -g @anthropic-ai/claude-code"
+                else
+                    echo "    npm uninstall -g @anthropic-ai/claude-code"
+                fi
+                echo ""
+            else
+                log_warn "ネイティブ版への移行をスキップしました（npm版で続行）"
+                RESULTS+=("Claude Code CLI: OK (npm版・移行推奨)")
             fi
         else
-            log_warn "インストールをスキップしました"
-            RESULTS+=("Claude Code CLI: 未インストール (スキップ)")
-            HAS_ERROR=true
+            # ネイティブ版が正常に動作している
+            log_success "Claude Code CLI がインストール済みです（ネイティブ版）"
+            log_info "バージョン: $CLAUDE_VERSION"
+            RESULTS+=("Claude Code CLI: OK")
         fi
     else
-        echo "  npm がインストールされていないため、先に Node.js をインストールしてください"
-        RESULTS+=("Claude Code CLI: 未インストール (npm必要)")
+        # command -v で見つかるが動かない（npm版でNode.js無し等）
+        log_warn "Claude Code CLI が見つかりましたが正常に動作しません"
+        log_info "検出パス: $CLAUDE_PATH"
+        if echo "$CLAUDE_PATH" | grep -qi "npm\|node_modules\|AppData"; then
+            HAS_NPM_CLAUDE=true
+            log_info "→ npm版（Node.js依存）が検出されました"
+        else
+            log_info "→ バージョン取得に失敗しました"
+        fi
+        NEED_CLAUDE_INSTALL=true
+    fi
+else
+    # claude コマンドが見つからない
+    NEED_CLAUDE_INSTALL=true
+fi
+
+if [ "$NEED_CLAUDE_INSTALL" = true ]; then
+    log_info "ネイティブ版 Claude Code CLI をインストールします"
+    log_info "Claude Code CLI をインストール中（ネイティブ版）..."
+    curl -fsSL https://claude.ai/install.sh | bash
+
+    # PATHを更新（インストール直後は反映されていない可能性）
+    export PATH="$HOME/.local/bin:$PATH"
+
+    # .bashrc に永続化（重複追加を防止）
+    if ! grep -q 'export PATH="\$HOME/.local/bin:\$PATH"' "$HOME/.bashrc" 2>/dev/null; then
+        echo '' >> "$HOME/.bashrc"
+        echo '# Claude Code CLI PATH (added by first_setup.sh)' >> "$HOME/.bashrc"
+        echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
+        log_info "~/.local/bin を ~/.bashrc の PATH に追加しました"
+    fi
+
+    if command -v claude &> /dev/null; then
+        CLAUDE_VERSION=$(claude --version 2>/dev/null || echo "unknown")
+        log_success "Claude Code CLI インストール完了（ネイティブ版）"
+        log_info "バージョン: $CLAUDE_VERSION"
+        RESULTS+=("Claude Code CLI: インストール完了")
+
+        # npm版が残っている場合の案内
+        if [ "$HAS_NPM_CLAUDE" = true ]; then
+            echo ""
+            log_info "ネイティブ版がPATHで優先されるため、npm版は無効化されます"
+            log_info "npm版を完全に削除するには以下を実行してください:"
+            if echo "$CLAUDE_PATH" | grep -qi "mnt/c\|AppData"; then
+                echo "  Windows の PowerShell で:"
+                echo "    npm uninstall -g @anthropic-ai/claude-code"
+            else
+                echo "    npm uninstall -g @anthropic-ai/claude-code"
+            fi
+        fi
+    else
+        log_error "インストールに失敗しました。パスを確認してください"
+        log_info "~/.local/bin がPATHに含まれているか確認してください"
+        RESULTS+=("Claude Code CLI: インストール失敗")
         HAS_ERROR=true
     fi
 fi
@@ -693,6 +731,25 @@ echo ""
 echo "  ┌──────────────────────────────────────────────────────────────┐"
 echo "  │  📜 次のステップ                                             │"
 echo "  └──────────────────────────────────────────────────────────────┘"
+echo ""
+echo "  ⚠️  初回のみ: 以下を手動で実行してください"
+echo ""
+echo "  STEP 0: PATHの反映（このシェルにインストール結果を反映）"
+echo "     source ~/.bashrc"
+echo ""
+echo "  STEP A: OAuth認証 + Bypass Permissions の承認（1コマンドで完了）"
+echo "     claude --dangerously-skip-permissions"
+echo ""
+echo "     1. ブラウザが開く → Anthropicアカウントでログイン → CLIに戻る"
+echo "        ※ WSLでブラウザが開かない場合は、表示されるURLをWindows側の"
+echo "          ブラウザに手動で貼り付けてください"
+echo "     2. Bypass Permissions の承認画面が表示される"
+echo "        → 「Yes, I accept」を選択（↓キーで2を選んでEnter）"
+echo "     3. /exit で退出"
+echo ""
+echo "     ※ 一度承認すれば ~/.claude/ に保存され、以降は不要です"
+echo ""
+echo "  ────────────────────────────────────────────────────────────────"
 echo ""
 echo "  出陣（全エージェント起動）:"
 echo "     ./shutsujin_departure.sh"

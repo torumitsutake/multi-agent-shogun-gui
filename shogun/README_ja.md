@@ -116,6 +116,23 @@ cd /mnt/c/tools/multi-agent-shogun
 </tr>
 </table>
 
+#### 🔑 初回のみ: 認証
+
+`first_setup.sh` 完了後、一度だけ以下を実行して認証：
+
+```bash
+# 1. PATHの反映
+source ~/.bashrc
+
+# 2. OAuthログイン + Bypass Permissions承認（1コマンドで完了）
+claude --dangerously-skip-permissions
+#    → ブラウザが開く → Anthropicアカウントでログイン → CLIに戻る
+#    → 「Bypass Permissions」の承認画面 → 「Yes, I accept」を選択（↓キーで2を選んでEnter）
+#    → /exit で退出
+```
+
+認証情報は `~/.claude/` に保存され、以降は不要。
+
 #### 📅 毎日の起動（初回セットアップ後）
 
 **Ubuntuターミナル**（WSL）を開いて実行：
@@ -254,8 +271,8 @@ wsl --install
 | WSL2 + Ubuntu | PowerShellで `wsl --install` | Windowsのみ |
 | Ubuntuをデフォルトに設定 | `wsl --set-default Ubuntu` | スクリプトの動作に必要 |
 | tmux | `sudo apt install tmux` | ターミナルマルチプレクサ |
-| Node.js v20+ | `nvm install 20` | Claude Code CLIに必要 |
-| Claude Code CLI | `npm install -g @anthropic-ai/claude-code` | Anthropic公式CLI |
+| Node.js v20+ | `nvm install 20` | MCPサーバーに必要 |
+| Claude Code CLI | `curl -fsSL https://claude.ai/install.sh \| bash` | Anthropic公式CLI（ネイティブ版を推奨。npm版は非推奨） |
 
 </details>
 
@@ -457,6 +474,24 @@ screenshot:
 
 ---
 
+## 🧭 核心思想（Philosophy）
+
+> **「脳死で依頼をこなすな。最速×最高のアウトプットを常に念頭に置け。」**
+
+将軍システムは5つの核心原則に基づいて設計されている：
+
+| 原則 | 説明 |
+|------|------|
+| **自律陣形設計** | テンプレートではなく、タスクの複雑さに応じて陣形を設計 |
+| **並列化** | サブエージェントを活用し、単一障害点を作らない |
+| **リサーチファースト** | 判断の前にエビデンスを探す |
+| **継続的学習** | モデルの知識カットオフだけに頼らない |
+| **三角測量** | 複数視点からのリサーチと統合的オーソライズ |
+
+詳細: **[docs/philosophy.md](docs/philosophy.md)**
+
+---
+
 ## 🎯 設計思想
 
 ### なぜ階層構造（将軍→家老→足軽）なのか
@@ -640,7 +675,8 @@ language: en   # 日本語 + 英訳併記
 │      │                                                              │
 │      ├── tmuxのチェック/インストール                                  │
 │      ├── Node.js v20+のチェック/インストール (nvm経由)                │
-│      ├── Claude Code CLIのチェック/インストール                      │
+│      ├── Claude Code CLIのチェック/インストール（ネイティブ版）       │
+│      │       ※ npm版検出時はネイティブ版への移行を提案                │
 │      └── Memory MCPサーバー設定                                      │
 │                                                                     │
 ├─────────────────────────────────────────────────────────────────────┤
@@ -821,6 +857,25 @@ current_tasks:
 ---
 
 ## 🔧 トラブルシューティング
+
+<details>
+<summary><b>npm版のClaude Code CLIを使っている？</b></summary>
+
+npm版（`npm install -g @anthropic-ai/claude-code`）は公式で非推奨（deprecated）になりました。`first_setup.sh` を再実行すると、npm版を検出してネイティブ版への移行を提案します。
+
+```bash
+# first_setup.sh を再実行
+./first_setup.sh
+
+# npm版が検出されると以下のメッセージが表示される:
+# ⚠️ npm版 Claude Code CLI が検出されました（公式非推奨）
+# ネイティブ版をインストールしますか? [Y/n]:
+
+# Y を選択後、npm版をアンインストール:
+npm uninstall -g @anthropic-ai/claude-code
+```
+
+</details>
 
 <details>
 <summary><b>MCPツールが動作しない？</b></summary>

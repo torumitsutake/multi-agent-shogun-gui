@@ -27,6 +27,24 @@ Give a single command. The **Shogun** (general) delegates to the **Karo** (stewa
 
 <!-- TODO: add demo.gif — record with asciinema or vhs -->
 
+## Philosophy
+
+> "Don't execute tasks mindlessly. Always keep 'fastest × best output' in mind."
+
+The Shogun System is built on five core principles:
+
+| Principle | Description |
+|-----------|-------------|
+| **Autonomous Formation** | Design task formations based on complexity, not templates |
+| **Parallelization** | Use subagents to prevent single-point bottlenecks |
+| **Research First** | Search for evidence before making decisions |
+| **Continuous Learning** | Don't rely solely on model knowledge cutoffs |
+| **Triangulation** | Multi-perspective research with integrated authorization |
+
+These principles are documented in detail: **[docs/philosophy.md](docs/philosophy.md)**
+
+---
+
 ## Why Shogun?
 
 Most multi-agent frameworks burn API tokens on coordination. Shogun doesn't.
@@ -162,6 +180,23 @@ cd ~/multi-agent-shogun && chmod +x *.sh
 ./first_setup.sh          # One-time: installs dependencies
 ./shutsujin_departure.sh  # Deploy your army
 ```
+
+### First-time only: Authentication
+
+After `first_setup.sh`, run these commands once to authenticate:
+
+```bash
+# 1. Apply PATH changes
+source ~/.bashrc
+
+# 2. OAuth login + Bypass Permissions approval (one command)
+claude --dangerously-skip-permissions
+#    → Browser opens → Log in with Anthropic account → Return to CLI
+#    → "Bypass Permissions" prompt appears → Select "Yes, I accept" (↓ to option 2, Enter)
+#    → Type /exit to quit
+```
+
+This saves credentials to `~/.claude/` — you won't need to do it again.
 
 ### Daily startup
 
@@ -360,6 +395,25 @@ multi-agent-shogun/
 ---
 
 ## Troubleshooting
+
+<details>
+<summary><b>Using npm version of Claude Code CLI?</b></summary>
+
+The npm version (`npm install -g @anthropic-ai/claude-code`) is officially deprecated. Re-run `first_setup.sh` to detect and migrate to the native version.
+
+```bash
+# Re-run first_setup.sh
+./first_setup.sh
+
+# If npm version is detected:
+# ⚠️ npm version of Claude Code CLI detected (officially deprecated)
+# Install native version? [Y/n]:
+
+# After selecting Y, uninstall npm version:
+npm uninstall -g @anthropic-ai/claude-code
+```
+
+</details>
 
 <details>
 <summary><b>Agents asking for permissions?</b></summary>
