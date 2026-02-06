@@ -196,15 +196,32 @@ async def get_karo_output():
         # ステータス判定: 末尾5行をチェック
         last_lines = raw_output.strip().split('\n')[-5:]
         last_text = '\n'.join(last_lines)
-        if 'esc to interrupt' in last_text:
+
+        # Claude Code 稼働中の証拠を収集
+        spinners = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏', '✻', '⠂', '✳']
+        thinking_keywords = ['thinking', 'Thinking', 'Effecting',
+                             'Boondoggling', 'Puzzling', 'Calculating', 'Fermenting', 'Crunching']
+
+        has_prompt = any(line.strip().startswith('❯') for line in last_lines)
+        has_spinner = any(spinner in last_text for spinner in spinners)
+        has_thinking = any(kw in last_text for kw in thinking_keywords)
+        has_esc = 'esc to interrupt' in last_text
+
+        # Claude Code が稼働していることの証拠があるか
+        is_claude_active = has_prompt or has_spinner or has_thinking or has_esc
+
+        if not is_claude_active:
+            # Claude Code 未起動
+            status = "unknown"
+        elif has_thinking or has_esc or has_spinner:
+            # 作業中
             status = "busy"
-        elif any(kw in last_text for kw in ['thinking', 'Thinking', 'Effecting',
-                 'Boondoggling', 'Puzzling', 'Calculating', 'Fermenting', 'Crunching']):
-            status = "busy"
-        elif any(line.strip().startswith('❯') for line in last_lines):
+        elif has_prompt:
+            # 待機中
             status = "idle"
         else:
-            status = "busy"
+            # ここには来ないはずだが、念のため
+            status = "unknown"
 
         return {
             "pane": "karo",
@@ -252,15 +269,31 @@ async def get_ashigaru_status():
             last_lines = raw_output.strip().split('\n')[-5:]
             last_text = '\n'.join(last_lines)
 
-            if 'esc to interrupt' in last_text:
+            # Claude Code 稼働中の証拠を収集
+            spinners = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏', '✻', '⠂', '✳']
+            thinking_keywords = ['thinking', 'Thinking', 'Effecting',
+                                 'Boondoggling', 'Puzzling', 'Calculating', 'Fermenting', 'Crunching']
+
+            has_prompt = any(line.strip().startswith('❯') for line in last_lines)
+            has_spinner = any(spinner in last_text for spinner in spinners)
+            has_thinking = any(kw in last_text for kw in thinking_keywords)
+            has_esc = 'esc to interrupt' in last_text
+
+            # Claude Code が稼働していることの証拠があるか
+            is_claude_active = has_prompt or has_spinner or has_thinking or has_esc
+
+            if not is_claude_active:
+                # Claude Code 未起動
+                status = "unknown"
+            elif has_thinking or has_esc or has_spinner:
+                # 作業中
                 status = "busy"
-            elif any(kw in last_text for kw in ['thinking', 'Thinking', 'Effecting',
-                     'Boondoggling', 'Puzzling', 'Calculating', 'Fermenting', 'Crunching']):
-                status = "busy"
-            elif any(line.strip().startswith('❯') for line in last_lines):
+            elif has_prompt:
+                # 待機中
                 status = "idle"
             else:
-                status = "busy"
+                # ここには来ないはずだが、念のため
+                status = "unknown"
 
             statuses.append({
                 "id": ashigaru_id,
