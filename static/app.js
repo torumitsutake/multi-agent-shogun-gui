@@ -244,19 +244,57 @@ function renderCompletedToday(items) {
 }
 
 /**
- * スキル化候補をキャッシュに保存（パネルセクションは折りたたみ）
+ * スキル化候補セクションを更新
  */
 function renderSkillCandidates(items) {
     // データをキャッシュ
     cachedSkillCandidates = items || [];
 
-    // パネルセクションを折りたたみで非表示に
-    const panel = document.getElementById('skill-candidates');
-    if (panel) {
-        panel.classList.add('collapsed');
-        var header = panel.querySelector('.collapsible-header');
-        if (header) header.setAttribute('aria-expanded', 'false');
+    const container = document.querySelector('#skill-candidates .content');
+    const section = document.getElementById('skill-candidates');
+    const isEmpty = !items || items.length === 0;
+
+    if (isEmpty) {
+        container.innerHTML = '<div class="empty">' + t('empty.none') + '</div>';
+        if (section) {
+            section.classList.add('collapsed');
+            var h = section.querySelector('.collapsible-header');
+            if (h) h.setAttribute('aria-expanded', 'false');
+        }
+        return;
     }
+
+    // 有内容時は展開
+    if (section) {
+        section.classList.remove('collapsed');
+        var h = section.querySelector('.collapsible-header');
+        if (h) h.setAttribute('aria-expanded', 'true');
+    }
+
+    // テーブル形式でレンダリング
+    const table = `
+        <table>
+            <thead>
+                <tr>
+                    <th>${t('skill.tableName') || 'スキル名'}</th>
+                    <th>${t('skill.tableDescription') || '概要'}</th>
+                    <th>${t('skill.tableUsage') || '用途'}</th>
+                    <th>${t('skill.tableProposer') || '提案者'}</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${items.map(item => `
+                    <tr>
+                        <td><strong>${escapeHtml(item.name || '-')}</strong></td>
+                        <td>${escapeHtml(item.description || '-')}</td>
+                        <td>${escapeHtml(item.generality || item.use_case || '-')}</td>
+                        <td>${escapeHtml(item.source || '-')}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    container.innerHTML = table;
 }
 
 /**
