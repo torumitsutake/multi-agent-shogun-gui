@@ -1,46 +1,71 @@
-# Order file (internal use only)
-claude-shogun-orders.md
+# ══════════════════════════════════════════════════
+# Whitelist-based .gitignore
+# デフォルト全除外 → OSS公開対象のみ許可
+# ══════════════════════════════════════════════════
 
-# Claude Code settings
-.claude/*
+# Step 1: 全て除外
+*
+
+# Step 2: ディレクトリの探索を許可（中身は個別に許可）
+!*/
+
+# Step 3: OSS公開対象ファイルを許可
+!.gitignore
+!.gitattributes
+!CLAUDE.md
+!LICENSE
+!README.md
+!README_ja.md
+
+# Claude Code settings (spinner verbs only, no secrets)
+!.claude/
 !.claude/settings.json
-.mcp.json
 
-# Test outputs (generated during testing)
-test_output/
+# Instructions (core OSS)
+!instructions/
+!instructions/shogun.md
+!instructions/karo.md
+!instructions/ashigaru.md
 
-# Generated skills (local development)
-skills/
+# Startup script
+!shutsujin_departure.sh
 
-# Temporary files
-*.tmp
-*.bak
+# Templates
+!templates/
+!templates/**
 
-# Demo/analysis outputs (generated during tasks)
-demo_output/
-
-# Runtime data (generated during operation)
-output/
-queue/research/
-queue/tasks/
-queue/reports/
-
-# Memory MCP data (local to each installation)
-memory/
-
-# Project context (local to each installation, except README)
-context/
+# Context README
+!context/
 !context/README.md
-queue/*.yaml
-dashboard.md
-config/projects.yaml
-status/
-config/settings.yaml
-logs/
 
-# Project details (contains client/confidential info)
-projects/
+# Scripts
+!scripts/
+!scripts/inbox_write.sh
+!scripts/ntfy.sh
+!scripts/ntfy_listener.sh
 
-# Internal docs (operation logs, test plans, article drafts)
-docs/
-archive/
+
+# SayTask (sample template only, not actual data)
+!saytask/
+!saytask/streaks.yaml.sample
+
+# Docs
+!docs/
+!docs/philosophy.md
+
+# Screenshots (masked — no secrets)
+!images/
+!images/screenshots/
+!images/screenshots/ntfy_saytask_rename.jpg
+!images/screenshots/ntfy_cmd043_progress.jpg
+!images/screenshots/ntfy_bloom_oc_test.jpg
+!images/screenshots/ntfy_persona_eval_complete.jpg
+!images/screenshots/ntfy_tasklist_v1_before.jpg
+!images/screenshots/ntfy_tasklist_v2_aligned.jpg
+!images/screenshots/ntfy_tasklist_final.jpg
+!images/screenshots/tdd_ndd_rdd.png
+
+# Skills (skill-creator only)
+!skills/
+!skills/skill-creator/
+!skills/skill-creator/SKILL.md
