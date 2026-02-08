@@ -1,0 +1,126 @@
+title = "Gitleaks config for multi-agent-shogun"
+
+# ============================================
+# Allowlist: 許可パターン（誤検知を防ぐ）
+# ============================================
+
+[allowlist]
+description = "Allowlist for test files, design docs, and README placeholders"
+
+# テストファイル内のダミーキー
+paths = [
+    '''tests/.*''',
+]
+
+# 設計書内のサンプルコード（reports/design_*.md）
+regexes = [
+    '''reports/design_.*\.md:.*ntn_xxxxx''',
+    '''reports/design_.*\.md:.*gsk_xxxxx''',
+    '''README.*\.md:.*xxx.*''',
+    '''README.*\.md:.*yyy.*''',
+    '''README.*\.md:.*placeholder''',
+]
+
+# ============================================
+# Custom Rules: カスタム検出ルール
+# ============================================
+
+[[rules]]
+id = "notion-api-token"
+description = "Notion API Token (Integration Secret)"
+regex = '''ntn_[a-zA-Z0-9]{50,}'''
+tags = ["notion", "api-key", "secret"]
+
+[[rules]]
+id = "groq-api-key"
+description = "Groq API Key"
+regex = '''gsk_[a-zA-Z0-9]{50,}'''
+tags = ["groq", "api-key", "secret"]
+
+[[rules]]
+id = "bearer-token"
+description = "Bearer Token (X API, OAuth, etc.)"
+regex = '''Bearer [a-zA-Z0-9_\-\.]{20,}'''
+tags = ["bearer", "token", "oauth"]
+
+[[rules]]
+id = "openai-api-key"
+description = "OpenAI API Key"
+regex = '''sk-[a-zA-Z0-9]{20,}'''
+tags = ["openai", "api-key", "secret"]
+
+[[rules]]
+id = "generic-password"
+description = "Generic password assignment pattern"
+regex = '''(?i)(password|passwd|pwd|secret)\s*[=:]\s*['"][^'"]{8,}['"]'''
+tags = ["password", "secret"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API key pattern (api_key = 'xxx')"
+regex = '''(?i)api[_-]?key\s*[=:]\s*['"][a-zA-Z0-9_\-\.]{20,}['"]'''
+tags = ["api-key", "secret"]
+
+# ============================================
+# X (Twitter) API patterns
+# ============================================
+
+[[rules]]
+id = "x-api-bearer-token"
+description = "X/Twitter API Bearer Token (AAAA... pattern)"
+regex = '''AAAAAAAAAAAAAAAAAAAAAA[a-zA-Z0-9%_\-\.]{30,}'''
+tags = ["x-api", "twitter", "bearer", "secret"]
+
+[[rules]]
+id = "x-api-user-id"
+description = "X/Twitter numeric user ID"
+regex = '''user_id:\s*["']?\d{15,}["']?'''
+tags = ["x-api", "twitter", "pii"]
+
+# ============================================
+# Zenn / X workflow exposure prevention
+# ============================================
+
+[[rules]]
+id = "zenn-personal-id"
+description = "Personal Zenn/X identifier"
+regex = '''shio_shoppaize'''
+tags = ["zenn", "personal", "pii"]
+
+[[rules]]
+id = "zenn-writer-skill"
+description = "AI writing skill for Zenn (workflow exposure)"
+regex = '''(?i)shogun-zenn|zenn-writer|zenn.writer'''
+tags = ["zenn", "ai-workflow", "exposure"]
+
+[[rules]]
+id = "zenn-feedback-analyzer"
+description = "Zenn feedback analyzer workflow (workflow exposure)"
+regex = '''(?i)zenn.?feedback|feedback.?analy[sz]er|zenn.?analy[sz]er'''
+tags = ["zenn", "ai-workflow", "exposure"]
+
+[[rules]]
+id = "x-feedback-loop"
+description = "X/Twitter feedback collection for blog improvement"
+regex = '''(?i)fetch.?x.?feedback|x[_\-]interaction|x_interactions_history'''
+tags = ["x-api", "ai-workflow", "exposure"]
+
+[[rules]]
+id = "skill-md-auto-improve"
+description = "SKILL.md auto-improvement workflow reference"
+regex = '''(?i)SKILL\.md.{0,20}(auto|自動).{0,20}(improv|改善|更新)|auto.{0,20}(improv|改善).{0,20}SKILL'''
+tags = ["ai-workflow", "exposure"]
+
+[[rules]]
+id = "expert-panel-analysis"
+description = "AI expert panel analyzing blog feedback"
+regex = '''(?i)(expert|専門家).{0,10}panel.{0,20}(zenn|記事|article|feedback|フィードバック)'''
+tags = ["ai-workflow", "exposure"]
+
+[[rules]]
+id = "ntfy-topic-name"
+description = "ntfy topic name (acts as password)"
+regex = '''ntfy_topic:\s*["']?[a-zA-Z0-9_\-]{5,}["']?'''
+tags = ["ntfy", "secret"]
+[rules.allowlist]
+regexes = ['''ntfy_topic:\s*["']?shogun-yourname["']?''', '''ntfy_topic:\s*["']?your-topic["']?''']
