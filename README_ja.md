@@ -1,16 +1,16 @@
 <div align="center">
 
-# multi-agent-shogun <sup>v2.0.0</sup>
+# multi-agent-shogun
 
-**Claude Code マルチエージェント統率システム**
+**AIコーディング軍団統率システム — Multi-CLI対応**
 
-*コマンド1つで、10体のAIエージェント（将軍1+家老1+足軽8）が並列稼働*
+*コマンド1つで、10体のAIエージェントが並列稼働 — **Claude Code / OpenAI Codex / GitHub Copilot / Kimi Code** 混成軍*
 
 **Talk Coding — Vibe Codingではなく、スマホに話すだけでAIが実行**
 
 [![GitHub Stars](https://img.shields.io/github/stars/yohey-w/multi-agent-shogun?style=social)](https://github.com/yohey-w/multi-agent-shogun)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Claude Code](https://img.shields.io/badge/Built_for-Claude_Code-blueviolet)](https://code.claude.com)
+[![v3.0 Multi-CLI](https://img.shields.io/badge/v3.0-Multi--CLI_Support-ff6600?style=flat-square&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiI+PHRleHQgeD0iMCIgeT0iMTIiIGZvbnQtc2l6ZT0iMTIiPuKalTwvdGV4dD48L3N2Zz4=)](https://github.com/yohey-w/multi-agent-shogun)
 [![Shell](https://img.shields.io/badge/Shell%2FBash-100%25-green)]()
 
 [English](README.md) | [日本語](README_ja.md)
@@ -27,7 +27,7 @@
 
 ## これは何？
 
-**multi-agent-shogun** は、複数の Claude Code インスタンスを同時に実行し、戦国時代の軍制のように統率するシステムです。
+**multi-agent-shogun** は、複数のAIコーディングCLIインスタンスを同時に実行し、戦国時代の軍制のように統率するシステムです。**Claude Code**、**OpenAI Codex**、**GitHub Copilot**、**Kimi Code** の4CLIに対応。
 
 **なぜ使うのか？**
 - 1つの命令で、8体のAIワーカーが並列で実行
@@ -75,6 +75,47 @@
 **完全な透明性** — すべてのエージェントが見えるtmuxペインで動作。すべての指示・報告・判断がプレーンなYAMLファイルで、読んで、diffして、バージョン管理できます。ブラックボックスなし。
 
 **実戦で鍛えた階層構造** — 将軍→家老→足軽の指揮系統が設計レベルで衝突を防止：明確な責任分担、エージェントごとの専用ファイル、イベント駆動通信、ポーリングなし。
+
+---
+
+## なぜCLI（APIではなく）？
+
+多くのAIコーディングツールはトークン従量課金。8体のOpus級エージェントをAPI経由で動かすと**$100+/時間**。CLI定額サブスクはこれを逆転させる：
+
+| | API（従量課金） | CLI（定額制） |
+|---|---|---|
+| **8エージェント × Opus** | ~$100+/時間 | ~$200/月 |
+| **コスト予測性** | 予測不能なスパイク | 月額固定 |
+| **使用時の心理** | 1トークンが気になる | 使い放題 |
+| **実験の余地** | 制約あり | 自由に投入 |
+
+**「AIを使い倒す」思想** — 定額CLIサブスクなら、8体の足軽を気兼ねなく投入できる。1時間稼働でも24時間稼働でもコストは同じ。「まあまあ」と「徹底的に」の二択で悩む必要がない — エージェントを増やせばいい。
+
+### Multi-CLI対応
+
+将軍システムは特定ベンダーに依存しない。4つのCLIツールに対応し、それぞれの強みを活かす：
+
+| CLI | 特徴 | デフォルトモデル |
+|-----|------|-----------------|
+| **Claude Code** | tmux統合の実績、Memory MCP、専用ファイルツール（Read/Write/Edit/Glob/Grep） | Claude Sonnet 4.5 |
+| **OpenAI Codex** | サンドボックス実行、JSONL構造化出力、`codex exec` ヘッドレスモード | gpt-5.3-codex |
+| **GitHub Copilot** | GitHub MCP組込、4種の特化エージェント（Explore/Task/Plan/Code-review）、`/delegate` | Claude Sonnet 4.5 |
+| **Kimi Code** | 無料プランあり、多言語サポート | Kimi k2 |
+
+統一ビルドシステムが共有テンプレートからCLI固有の指示書を自動生成：
+
+```
+instructions/
+├── common/              # 共通ルール（全CLI共通）
+├── cli_specific/        # CLI固有のツール説明
+│   ├── claude_tools.md  # Claude Code ツール・機能
+│   └── copilot_tools.md # GitHub Copilot CLI ツール・機能
+└── roles/               # ロール定義（将軍、家老、足軽）
+    ↓ ビルド
+CLAUDE.md / AGENTS.md / copilot-instructions.md  ← CLI別に生成
+```
+
+ルールの変更は1箇所。全CLIに反映。同期ズレなし。
 
 ---
 
@@ -1187,7 +1228,10 @@ multi-agent-shogun/
 ├── instructions/             # エージェント指示書
 │   ├── shogun.md             # 将軍の指示書
 │   ├── karo.md               # 家老の指示書
-│   └── ashigaru.md           # 足軽の指示書
+│   ├── ashigaru.md           # 足軽の指示書
+│   └── cli_specific/         # CLI固有のツール説明
+│       ├── claude_tools.md   # Claude Code ツール・機能
+│       └── copilot_tools.md  # GitHub Copilot CLI ツール・機能
 │
 ├── scripts/                  # ユーティリティスクリプト
 │   ├── inbox_write.sh        # エージェントinboxへのメッセージ書き込み
@@ -1383,20 +1427,27 @@ tmux respawn-pane -t shogun:0.0 -k 'claude --model opus --dangerously-skip-permi
 
 ---
 
+## v3.0の新機能 — Multi-CLI
+
+> **Shogunはもう Claude 専用ではない。** 4つのAIコーディングCLIを1つの軍に混成せよ。
+
+- **Multi-CLIがファーストクラスアーキテクチャに** — `lib/cli_adapter.sh` がエージェントごとにCLIを動的選択。`settings.yaml` の1行を変えるだけで、任意のワーカーをClaude Code / Codex / Copilot / Kimi に切り替え可能
+- **OpenAI Codex CLI統合** — GPT-5.3-codexを `--dangerously-bypass-approvals-and-sandbox` で真の自律実行。`--no-alt-screen` でエージェントの作業内容がtmuxに可視化
+- **CLIバイパスフラグの発見** — `--full-auto` は実は全自動ではない（`-a on-request` のエイリアス）。4CLIすべての正しいバイパスフラグを文書化
+- **ハイブリッドアーキテクチャ** — 指揮層（将軍＋家老）はMemory MCPとメールボックス連携のためClaude Codeに固定。作業層（足軽）はCLI非依存
+- **コミュニティ貢献によるCLIアダプタ** — [@yuto-ts](https://github.com/yuto-ts)（cli_adapter.sh）、[@circlemouth](https://github.com/circlemouth)（Codex対応）、[@koba6316](https://github.com/koba6316)（タスクルーティング）に感謝
+
 <details>
-<summary><b>v2.0.0の新機能</b></summary>
+<summary><b>v2.0の機能</b></summary>
 
 - **ntfy双方向通信** — スマホからコマンドを送信、タスク完了時にプッシュ通知を受信
-- **SayTask通知** — ストリーク追跡、Eat the Frog 🐸、行動心理学に基づくモチベーション管理
+- **SayTask通知** — ストリーク追跡、Eat the Frog、行動心理学に基づくモチベーション管理
 - **ペインボーダータスク表示** — tmuxペインボーダーで各エージェントの現在のタスクを一目で確認
-- **60%の指示書トークン削減** — 英語のみの指示書 + YAML再構造化
-- **42%の/clear復帰コスト削減** — コンテキストリセット後のエージェント復帰高速化
-- **決戦モード**（`-k` フラグ）— 全足軽Opusの最大能力陣形
-- **タスク依存関係システム**（`blockedBy`）— 依存タスクの自動ブロック解除
-- **5つの統合テンプレート** — ファクトファインディング、提案書、コードレビュー、分析の標準化レポート形式
 - **シャウトモード**（デフォルト）— 足軽がタスク完了時にパーソナライズされた戦国風の叫びを表示。`--silent` で無効化
 - **nudge-only メールボックス** — ファイルベースのinboxで通信、`send-keys` は1行の起床通知のみ送信。配信障害を根絶
 - **エージェント自己識別**（`@agent_id`）— tmuxユーザーオプションによる安定したID、ペイン再配置の影響を受けない
+- **決戦モード**（`-k` フラグ）— 全足軽Opusの最大能力陣形
+- **タスク依存関係システム**（`blockedBy`）— 依存タスクの自動ブロック解除
 
 </details>
 

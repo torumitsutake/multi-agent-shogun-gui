@@ -1,8 +1,8 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
 # inbox_watcher.sh — メールボックス監視＆起動シグナル配信
-# Usage: bash scripts/inbox_watcher.sh <agent_id> <pane_target>
-# Example: bash scripts/inbox_watcher.sh karo multiagent:0.0
+# Usage: bash scripts/inbox_watcher.sh <agent_id> <pane_target> [cli_type]
+# Example: bash scripts/inbox_watcher.sh karo multiagent:0.0 claude
 #
 # 設計思想:
 #   メッセージ本体はファイル（inbox YAML）に書く = 確実
@@ -20,13 +20,14 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 AGENT_ID="$1"
 PANE_TARGET="$2"
+CLI_TYPE="${3:-claude}"  # CLI種別（claude/codex/copilot）。未指定→claude（後方互換）
 
 INBOX="$SCRIPT_DIR/queue/inbox/${AGENT_ID}.yaml"
 LOCKFILE="${INBOX}.lock"
 SEND_KEYS_TIMEOUT=5  # seconds — prevents hang (PID 274337 incident)
 
 if [ -z "$AGENT_ID" ] || [ -z "$PANE_TARGET" ]; then
-    echo "Usage: inbox_watcher.sh <agent_id> <pane_target>" >&2
+    echo "Usage: inbox_watcher.sh <agent_id> <pane_target> [cli_type]" >&2
     exit 1
 fi
 
@@ -36,7 +37,7 @@ if [ ! -f "$INBOX" ]; then
     echo "messages: []" > "$INBOX"
 fi
 
-echo "[$(date)] inbox_watcher started — agent: $AGENT_ID, pane: $PANE_TARGET" >&2
+echo "[$(date)] inbox_watcher started — agent: $AGENT_ID, pane: $PANE_TARGET, cli: $CLI_TYPE" >&2
 
 # Ensure inotifywait is available
 if ! command -v inotifywait &>/dev/null; then
@@ -79,11 +80,44 @@ except Exception as e:
 
 # ─── Send CLI command directly via send-keys ───
 # For /clear and /model only. These are CLI commands, not conversation messages.
+# CLI_TYPE別分岐: claude→そのまま, codex→/clear対応・/modelスキップ,
+#                  copilot→Ctrl-C+再起動・/modelスキップ
 send_cli_command() {
     local cmd="$1"
-    echo "[$(date)] Sending CLI command to $AGENT_ID: $cmd" >&2
 
-    if ! timeout "$SEND_KEYS_TIMEOUT" tmux send-keys -t "$PANE_TARGET" "$cmd" 2>/dev/null; then
+    # CLI別コマンド変換
+    local actual_cmd="$cmd"
+    case "$CLI_TYPE" in
+        codex)
+            # Codex: /clear対応（TUIモード）, /model非対応→スキップ
+            if [[ "$cmd" == /model* ]]; then
+                echo "[$(date)] Skipping $cmd (not supported on codex)" >&2
+                return 0
+            fi
+            ;;
+        copilot)
+            # Copilot: /clearはCtrl-C+再起動, /model非対応→スキップ
+            if [[ "$cmd" == "/clear" ]]; then
+                echo "[$(date)] Copilot /clear: sending Ctrl-C + restart" >&2
+                timeout "$SEND_KEYS_TIMEOUT" tmux send-keys -t "$PANE_TARGET" C-c 2>/dev/null || true
+                sleep 2
+                timeout "$SEND_KEYS_TIMEOUT" tmux send-keys -t "$PANE_TARGET" "copilot --yolo" 2>/dev/null || true
+                sleep 0.3
+                timeout "$SEND_KEYS_TIMEOUT" tmux send-keys -t "$PANE_TARGET" Enter 2>/dev/null || true
+                sleep 3
+                return 0
+            fi
+            if [[ "$cmd" == /model* ]]; then
+                echo "[$(date)] Skipping $cmd (not supported on copilot)" >&2
+                return 0
+            fi
+            ;;
+        # claude: commands pass through as-is
+    esac
+
+    echo "[$(date)] Sending CLI command to $AGENT_ID ($CLI_TYPE): $actual_cmd" >&2
+
+    if ! timeout "$SEND_KEYS_TIMEOUT" tmux send-keys -t "$PANE_TARGET" "$actual_cmd" 2>/dev/null; then
         echo "[$(date)] WARNING: send-keys timed out for CLI command" >&2
         return 1
     fi
@@ -94,7 +128,7 @@ send_cli_command() {
     fi
 
     # /clear needs extra wait time before follow-up
-    if [[ "$cmd" == "/clear" ]]; then
+    if [[ "$actual_cmd" == "/clear" ]]; then
         sleep 3
     else
         sleep 1

@@ -12,6 +12,7 @@
 # Step 3: OSS公開対象ファイルを許可
 !.gitignore
 !.gitattributes
+!.gitleaks.toml
 !CLAUDE.md
 !LICENSE
 !README.md
@@ -27,6 +28,24 @@
 !instructions/karo.md
 !instructions/ashigaru.md
 
+# Multi-CLI: CLI-specific tool descriptions
+!instructions/cli_specific/
+!instructions/cli_specific/claude_tools.md
+!instructions/cli_specific/codex_tools.md
+!instructions/cli_specific/copilot_tools.md
+!instructions/cli_specific/kimi_tools.md
+
+# Multi-CLI: Generated instruction files (built by build_instructions.sh)
+!instructions/generated/
+!instructions/generated/*.md
+
+# Multi-CLI: CLI adapter library
+!lib/
+!lib/cli_adapter.sh
+
+# Multi-CLI: Codex auto-load file
+!AGENTS.md
+
 # Startup script
 !shutsujin_departure.sh
 
@@ -41,8 +60,10 @@
 # Scripts
 !scripts/
 !scripts/inbox_write.sh
+!scripts/inbox_watcher.sh
 !scripts/ntfy.sh
 !scripts/ntfy_listener.sh
+!scripts/build_instructions.sh
 
 
 # SayTask (sample template only, not actual data)
