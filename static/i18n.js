@@ -117,6 +117,11 @@
             'ashigaru.idle': '待機中',
             'ashigaru.unknown': '不明',
 
+            'cli.claude': 'Claude Code',
+            'cli.codex': 'OpenAI Codex',
+            'cli.copilot': 'GitHub Copilot',
+            'cli.kimi': 'Kimi Code',
+
             'footer.text': '戦国AIオーケストレーション'
         },
         en: {
@@ -228,6 +233,11 @@
             'ashigaru.busy': 'In Battle',
             'ashigaru.idle': 'Idle',
             'ashigaru.unknown': 'Unknown',
+
+            'cli.claude': 'Claude Code',
+            'cli.codex': 'OpenAI Codex',
+            'cli.copilot': 'GitHub Copilot',
+            'cli.kimi': 'Kimi Code',
 
             'footer.text': 'Sengoku AI Orchestration'
         }

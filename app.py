@@ -4,6 +4,7 @@ import os
 import subprocess
 from pathlib import Path
 
+import yaml
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse
 from pydantic import BaseModel
@@ -16,6 +17,79 @@ class CommandRequest(BaseModel):
     command: str
 
 app = FastAPI(title="multi-agent-shogun-gui")
+
+# サポートするCLI種別
+SUPPORTED_CLIS = {"claude", "codex", "copilot", "kimi"}
+
+# CLI種別ごとのステータス検出パラメータ
+CLI_STATUS_INDICATORS = {
+    "claude": {
+        "prompts": ["❯"],
+        "spinners": ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏', '✻', '⠂', '✳'],
+        "thinking_keywords": ['thinking', 'Thinking', 'Effecting',
+                              'Boondoggling', 'Puzzling', 'Calculating', 'Fermenting', 'Crunching'],
+        "busy_keywords": ['esc to interrupt'],
+    },
+    "codex": {
+        "prompts": ["❯", ">"],
+        "spinners": ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏', '✻'],
+        "thinking_keywords": ['thinking', 'Thinking', 'running'],
+        "busy_keywords": [],
+    },
+    "copilot": {
+        "prompts": ["❯", ">"],
+        "spinners": ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'],
+        "thinking_keywords": ['thinking', 'Thinking'],
+        "busy_keywords": [],
+    },
+    "kimi": {
+        "prompts": ["❯", ">"],
+        "spinners": ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'],
+        "thinking_keywords": ['thinking', 'Thinking'],
+        "busy_keywords": [],
+    },
+}
+
+
+def get_agent_cli_type(pane_target: str) -> str:
+    """tmuxペインの@agent_cliオプションからCLI種別を取得"""
+    try:
+        result = subprocess.run(
+            ["tmux", "show-options", "-p", "-t", pane_target, "-v", "@agent_cli"],
+            capture_output=True, text=True, timeout=2
+        )
+        cli_type = result.stdout.strip()
+        if cli_type in SUPPORTED_CLIS:
+            return cli_type
+    except Exception:
+        pass
+    return "claude"
+
+
+def detect_pane_status(raw_output: str, cli_type: str = "claude") -> str:
+    """ペイン出力からエージェントのステータスを判定する（Multi-CLI対応）"""
+    last_lines = raw_output.strip().split('\n')[-5:]
+    last_text = '\n'.join(last_lines)
+
+    indicators = CLI_STATUS_INDICATORS.get(cli_type, CLI_STATUS_INDICATORS["claude"])
+
+    has_prompt = any(
+        line.strip().startswith(p) for line in last_lines
+        for p in indicators["prompts"]
+    )
+    has_spinner = any(s in last_text for s in indicators["spinners"])
+    has_thinking = any(kw in last_text for kw in indicators["thinking_keywords"])
+    has_busy = any(kw in last_text for kw in indicators["busy_keywords"])
+
+    is_active = has_prompt or has_spinner or has_thinking or has_busy
+
+    if not is_active:
+        return "unknown"
+    elif has_thinking or has_busy or has_spinner:
+        return "busy"
+    elif has_prompt:
+        return "idle"
+    return "unknown"
 
 
 def filter_pane_output(output: str) -> str:
@@ -81,6 +155,32 @@ async def get_dashboard():
     if not dashboard_path:
         return {"error": "Dashboard path not configured. Set SHOGUN_DASHBOARD_PATH environment variable."}
     return parse_dashboard(dashboard_path)
+
+
+@app.get("/api/cli-config")
+async def get_cli_config():
+    """各エージェントのCLI設定を返す
+
+    Returns:
+        エージェントごとのCLI種別とモデル情報をJSON形式で返す
+    """
+    agents = {}
+
+    # 将軍
+    shogun_cli = get_agent_cli_type("shogun:0.0")
+    agents["shogun"] = {"cli_type": shogun_cli}
+
+    # 家老
+    karo_cli = get_agent_cli_type("multiagent:0.0")
+    agents["karo"] = {"cli_type": karo_cli}
+
+    # 足軽1-8
+    for i in range(1, 9):
+        target = f"multiagent:agents.{i}"
+        cli = get_agent_cli_type(target)
+        agents[f"ashigaru{i}"] = {"cli_type": cli}
+
+    return {"agents": agents}
 
 
 @app.get("/api/ashigaru/{ashigaru_id}/output")
@@ -193,40 +293,15 @@ async def get_karo_output():
         raw_output = result.stdout
         filtered_output = filter_pane_output(raw_output)
 
-        # ステータス判定: 末尾5行をチェック
-        last_lines = raw_output.strip().split('\n')[-5:]
-        last_text = '\n'.join(last_lines)
-
-        # Claude Code 稼働中の証拠を収集
-        spinners = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏', '✻', '⠂', '✳']
-        thinking_keywords = ['thinking', 'Thinking', 'Effecting',
-                             'Boondoggling', 'Puzzling', 'Calculating', 'Fermenting', 'Crunching']
-
-        has_prompt = any(line.strip().startswith('❯') for line in last_lines)
-        has_spinner = any(spinner in last_text for spinner in spinners)
-        has_thinking = any(kw in last_text for kw in thinking_keywords)
-        has_esc = 'esc to interrupt' in last_text
-
-        # Claude Code が稼働していることの証拠があるか
-        is_claude_active = has_prompt or has_spinner or has_thinking or has_esc
-
-        if not is_claude_active:
-            # Claude Code 未起動
-            status = "unknown"
-        elif has_thinking or has_esc or has_spinner:
-            # 作業中
-            status = "busy"
-        elif has_prompt:
-            # 待機中
-            status = "idle"
-        else:
-            # ここには来ないはずだが、念のため
-            status = "unknown"
+        # CLI種別を取得してステータス判定
+        karo_cli = get_agent_cli_type("multiagent:0.0")
+        status = detect_pane_status(raw_output, karo_cli)
 
         return {
             "pane": "karo",
             "output": filtered_output,
             "status": status,
+            "cli_type": karo_cli,
             "error": None
         }
     except subprocess.TimeoutExpired:
@@ -264,41 +339,17 @@ async def get_ashigaru_status():
                 })
                 continue
 
-            # ステータス判定ロジック（get_karo_output と同じ）
             raw_output = result.stdout
-            last_lines = raw_output.strip().split('\n')[-5:]
-            last_text = '\n'.join(last_lines)
 
-            # Claude Code 稼働中の証拠を収集
-            spinners = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏', '✻', '⠂', '✳']
-            thinking_keywords = ['thinking', 'Thinking', 'Effecting',
-                                 'Boondoggling', 'Puzzling', 'Calculating', 'Fermenting', 'Crunching']
-
-            has_prompt = any(line.strip().startswith('❯') for line in last_lines)
-            has_spinner = any(spinner in last_text for spinner in spinners)
-            has_thinking = any(kw in last_text for kw in thinking_keywords)
-            has_esc = 'esc to interrupt' in last_text
-
-            # Claude Code が稼働していることの証拠があるか
-            is_claude_active = has_prompt or has_spinner or has_thinking or has_esc
-
-            if not is_claude_active:
-                # Claude Code 未起動
-                status = "unknown"
-            elif has_thinking or has_esc or has_spinner:
-                # 作業中
-                status = "busy"
-            elif has_prompt:
-                # 待機中
-                status = "idle"
-            else:
-                # ここには来ないはずだが、念のため
-                status = "unknown"
+            # CLI種別を取得してステータス判定
+            cli_type = get_agent_cli_type(target)
+            status = detect_pane_status(raw_output, cli_type)
 
             statuses.append({
                 "id": ashigaru_id,
                 "num": pane_num,
-                "status": status
+                "status": status,
+                "cli_type": cli_type
             })
 
         except subprocess.TimeoutExpired:

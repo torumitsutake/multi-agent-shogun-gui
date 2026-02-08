@@ -435,6 +435,19 @@ function renderInquiries(items) {
 }
 
 /**
+ * CLI種別の短縮ラベルを返す
+ */
+function getCliLabel(cliType) {
+    switch (cliType) {
+        case 'claude': return 'Claude';
+        case 'codex': return 'Codex';
+        case 'copilot': return 'Copilot';
+        case 'kimi': return 'Kimi';
+        default: return cliType || 'Claude';
+    }
+}
+
+/**
  * HTMLエスケープ
  */
 function escapeHtml(text) {
@@ -493,17 +506,20 @@ async function fetchAshigaruStatus() {
         const data = await response.json();
         const statuses = data.statuses || [];
 
-        // 足軽アイコンを生成
+        // 足軽アイコンを生成（CLI種別バッジ付き）
         const iconsHtml = statuses.map(ash => {
             const statusClass = ash.status === 'busy' ? 'ashigaru-busy' :
                                ash.status === 'idle' ? 'ashigaru-idle' : 'ashigaru-unknown';
             const statusText = ash.status === 'busy' ? t('ashigaru.busy') :
                               ash.status === 'idle' ? t('ashigaru.idle') : t('ashigaru.unknown');
-            const title = `${t('modal.ashigaruTitle').replace('{N}', ash.num)} - ${statusText}`;
+            const cliType = ash.cli_type || 'claude';
+            const cliLabel = getCliLabel(cliType);
+            const title = `${t('modal.ashigaruTitle').replace('{N}', ash.num)} - ${statusText} (${cliLabel})`;
 
             return `
                 <div class="ashigaru-icon ${statusClass}" onclick="openModal('${ash.id}')" title="${escapeHtml(title)}">
                     <span class="ashigaru-num">${ash.num}</span>
+                    <span class="cli-badge cli-${cliType}">${cliLabel}</span>
                     <span class="ashigaru-status-dot"></span>
                 </div>
             `;
@@ -975,13 +991,15 @@ async function fetchKaroOutput() {
         if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
         const data = await response.json();
 
-        // バッジのステータス更新
+        // バッジのステータス更新（CLI種別表示付き）
+        const karoCli = data.cli_type || 'claude';
+        const karoCliLabel = getCliLabel(karoCli);
         if (data.status === 'busy') {
             badge.className = 'karo-badge badge-busy';
-            statusText.textContent = t('karo.busy');
+            statusText.textContent = `${t('karo.busy')} [${karoCliLabel}]`;
         } else {
             badge.className = 'karo-badge badge-idle';
-            statusText.textContent = t('karo.idle');
+            statusText.textContent = `${t('karo.idle')} [${karoCliLabel}]`;
         }
 
         // ターミナル出力更新
