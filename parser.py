@@ -324,6 +324,24 @@ def parse_skill_candidates(section: str) -> list[dict]:
                 }
                 candidates.append(skill_info)
 
+    # パターン3: テーブル形式のフォールバック（| スキル名 | 概要 | ... |）
+    if not candidates:
+        rows = parse_table(main_section)
+        for row in rows:
+            name = row.get("スキル名", row.get("名前", ""))
+            if not name:
+                continue
+            skill_info = {
+                "name": name,
+                "description": row.get("概要", row.get("説明", "")),
+                "source": row.get("検出元", row.get("発見元", "")),
+                "status": row.get("状態", "承認待ち"),
+            }
+            generality = row.get("汎用性", "")
+            if generality:
+                skill_info["generality"] = generality
+            candidates.append(skill_info)
+
     return candidates
 
 

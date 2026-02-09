@@ -25,28 +25,32 @@ SUPPORTED_CLIS = {"claude", "codex", "copilot", "kimi"}
 CLI_STATUS_INDICATORS = {
     "claude": {
         "prompts": ["❯"],
-        "spinners": ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏', '✻', '⠂', '✳'],
+        "spinners": ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏', '✻', '⠂', '✳', '✶'],
         "thinking_keywords": ['thinking', 'Thinking', 'Effecting',
                               'Boondoggling', 'Puzzling', 'Calculating', 'Fermenting', 'Crunching'],
         "busy_keywords": ['esc to interrupt'],
+        "status_bar_keywords": ['bypass permissions', 'auto-approve', 'shift+tab to cycle'],
     },
     "codex": {
         "prompts": ["❯", ">"],
         "spinners": ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏', '✻'],
         "thinking_keywords": ['thinking', 'Thinking', 'running'],
         "busy_keywords": [],
+        "status_bar_keywords": [],
     },
     "copilot": {
         "prompts": ["❯", ">"],
         "spinners": ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'],
         "thinking_keywords": ['thinking', 'Thinking'],
         "busy_keywords": [],
+        "status_bar_keywords": [],
     },
     "kimi": {
         "prompts": ["❯", ">"],
         "spinners": ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'],
         "thinking_keywords": ['thinking', 'Thinking'],
         "busy_keywords": [],
+        "status_bar_keywords": [],
     },
 }
 
@@ -67,7 +71,14 @@ def get_agent_cli_type(pane_target: str) -> str:
 
 
 def detect_pane_status(raw_output: str, cli_type: str = "claude") -> str:
-    """ペイン出力からエージェントのステータスを判定する（Multi-CLI対応）"""
+    """ペイン出力からエージェントのステータスを判定する（Multi-CLI対応）
+
+    判定ロジック（優先順位順）:
+    1. スピナー/thinking/busyキーワード検出 → "busy"
+    2. ❯プロンプト検出 → "idle"
+    3. ステータスバー検出（❯もスピナーもなし） → "busy"（thinking中と推定）
+    4. 上記いずれもなし → "unknown"
+    """
     last_lines = raw_output.strip().split('\n')[-5:]
     last_text = '\n'.join(last_lines)
 
@@ -80,15 +91,20 @@ def detect_pane_status(raw_output: str, cli_type: str = "claude") -> str:
     has_spinner = any(s in last_text for s in indicators["spinners"])
     has_thinking = any(kw in last_text for kw in indicators["thinking_keywords"])
     has_busy = any(kw in last_text for kw in indicators["busy_keywords"])
+    has_status_bar = any(
+        kw in last_text for kw in indicators.get("status_bar_keywords", [])
+    )
 
-    is_active = has_prompt or has_spinner or has_thinking or has_busy
+    is_active = has_prompt or has_spinner or has_thinking or has_busy or has_status_bar
 
     if not is_active:
         return "unknown"
-    elif has_thinking or has_busy or has_spinner:
+    if has_thinking or has_busy or has_spinner:
         return "busy"
-    elif has_prompt:
+    if has_prompt:
         return "idle"
+    if has_status_bar:
+        return "busy"
     return "unknown"
 
 
