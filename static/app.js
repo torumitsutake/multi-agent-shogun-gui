@@ -231,10 +231,10 @@ function renderCompletedToday(items) {
             <tbody>
                 ${items.map(item => `
                     <tr>
-                        <td>${escapeHtml(item['ID'] || item.id || '-')}</td>
-                        <td>${escapeHtml(item['プロジェクト'] || item.project || '-')}</td>
-                        <td>${escapeHtml(item['タスク'] || item.task || '-')}</td>
-                        <td><span class="badge badge-success">${escapeHtml(item['結果'] || item.result || '-')}</span></td>
+                        <td>${escapeHtml(item.time || item['時刻'] || item['ID'] || item.id || '-')}</td>
+                        <td>${escapeHtml(item.project || item['プロジェクト'] || item['戦場'] || '-')}</td>
+                        <td>${escapeHtml(item.task || item['タスク'] || item['任務'] || '-')}</td>
+                        <td><span class="badge badge-success">${escapeHtml(item.result || item['結果'] || '-')}</span></td>
                     </tr>
                 `).join('')}
             </tbody>

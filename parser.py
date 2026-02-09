@@ -26,6 +26,45 @@ def strip_emoji(text: str) -> str:
     return result.strip()
 
 
+def normalize_table_keys(rows: list[dict]) -> list[dict]:
+    """テーブルのカラム名を正規化キーに変換
+
+    dashboard.mdのテーブルカラム名（日本語）を、GUIアプリが期待する
+    正規化キー（英語）に変換する。
+
+    変換マッピング:
+    - 時刻/ID → time
+    - 戦場/プロジェクト → project
+    - 任務/タスク → task
+    - 結果 → result
+    - 担当 → assignee
+    - 状態/状況 → status
+    """
+    key_mapping = {
+        "時刻": "time",
+        "ID": "time",
+        "戦場": "project",
+        "プロジェクト": "project",
+        "任務": "task",
+        "タスク": "task",
+        "結果": "result",
+        "担当": "assignee",
+        "状態": "status",
+        "状況": "status",
+    }
+
+    normalized = []
+    for row in rows:
+        new_row = {}
+        for key, value in row.items():
+            # マッピングがあれば正規化キーを使用、なければ元のキーを保持
+            normalized_key = key_mapping.get(key, key)
+            new_row[normalized_key] = value
+        normalized.append(new_row)
+
+    return normalized
+
+
 def parse_dashboard(filepath: str) -> dict[str, Any]:
     """dashboard.md をパースしてJSONに変換"""
     path = Path(filepath)
@@ -61,9 +100,9 @@ def parse_dashboard(filepath: str) -> dict[str, Any]:
         if section_title.startswith("要対応"):
             result["action_required"] = parse_action_required(section)
         elif section_title.startswith("進行中"):
-            result["in_progress"] = parse_table(section)
+            result["in_progress"] = normalize_table_keys(parse_table(section))
         elif section_title.startswith("本日の戦果"):
-            result["completed_today"] = parse_table(section)
+            result["completed_today"] = normalize_table_keys(parse_table(section))
             result["completed_reports"] = parse_completed_reports(section)
         elif section_title.startswith("スキル化候補"):
             result["skill_candidates"] = parse_skill_candidates(section)
