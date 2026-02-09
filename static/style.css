@@ -1474,6 +1474,107 @@ footer p::before {
     box-shadow: 0 2px 10px var(--glow-gold);
 }
 
+/* ===== Skill Candidates Section - Card List ===== */
+.skill-candidates-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.skill-candidate-card-item {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(22, 33, 62, 0.9));
+    border: 2px solid rgba(212, 175, 55, 0.3);
+    border-left: 4px solid var(--gold);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    transition: all var(--transition-normal);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.skill-candidate-card-item:hover {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(22, 33, 62, 1));
+    border-color: var(--gold);
+    transform: translateX(4px);
+    box-shadow: 0 4px 20px var(--glow-gold);
+}
+
+.skill-candidate-card-header {
+    margin-bottom: 0.75rem;
+}
+
+.skill-candidate-card-name {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--gold-light);
+    text-shadow: 0 0 10px var(--glow-gold);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.skill-candidate-card-name::before {
+    content: '📜';
+    font-size: 1rem;
+}
+
+.skill-candidate-card-body {
+    padding-left: 0;
+}
+
+.skill-candidate-card-description {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    line-height: 1.7;
+    margin: 0 0 0.75rem 0;
+}
+
+.skill-candidate-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.skill-candidate-card-source {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.6rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+/* Dark mode support (inherited from existing variables) */
+@media (prefers-color-scheme: dark) {
+    .skill-candidate-card-item {
+        background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(22, 33, 62, 0.95));
+    }
+
+    .skill-candidate-card-item:hover {
+        background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(22, 33, 62, 1));
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .skill-candidate-card-item {
+        padding: 1rem;
+    }
+
+    .skill-candidate-card-name {
+        font-size: 1rem;
+    }
+
+    .skill-candidate-card-description {
+        font-size: 0.9rem;
+    }
+}
+
 /* ===== Skill Candidates Card Layout ===== */
 .skill-candidates-grid {
     display: grid;

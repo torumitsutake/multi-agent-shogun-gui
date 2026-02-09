@@ -255,7 +255,7 @@ function renderSkillCandidates(items) {
     const isEmpty = !items || items.length === 0;
 
     if (isEmpty) {
-        container.innerHTML = '<div class="empty">' + t('empty.none') + '</div>';
+        container.innerHTML = '<div class="empty">' + t('skill.noSkills') + '</div>';
         if (section) {
             section.classList.add('collapsed');
             var h = section.querySelector('.collapsible-header');
@@ -271,30 +271,29 @@ function renderSkillCandidates(items) {
         if (h) h.setAttribute('aria-expanded', 'true');
     }
 
-    // テーブル形式でレンダリング
-    const table = `
-        <table>
-            <thead>
-                <tr>
-                    <th>${t('skill.tableName') || 'スキル名'}</th>
-                    <th>${t('skill.tableDescription') || '概要'}</th>
-                    <th>${t('skill.tableUsage') || '用途'}</th>
-                    <th>${t('skill.tableProposer') || '提案者'}</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${items.map(item => `
-                    <tr>
-                        <td><strong>${escapeHtml(item.name || '-')}</strong></td>
-                        <td>${escapeHtml(item.description || '-')}</td>
-                        <td>${escapeHtml(item.generality || item.use_case || '-')}</td>
-                        <td>${escapeHtml(item.source || '-')}</td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    `;
-    container.innerHTML = table;
+    // カード形式でレンダリング
+    const cards = items.map(item => {
+        const name = item.name || '-';
+        const description = item.description || t('skill.noDescription');
+        const source = item.source || t('skill.unknownSource');
+        const status = item.status || '承認待ち';
+
+        return `
+        <div class="skill-candidate-card-item">
+            <div class="skill-candidate-card-header">
+                <h3 class="skill-candidate-card-name">${escapeHtml(name)}</h3>
+            </div>
+            <div class="skill-candidate-card-body">
+                <p class="skill-candidate-card-description">${escapeHtml(description)}</p>
+                <div class="skill-candidate-card-meta">
+                    <span class="skill-candidate-card-source">${t('skill.source')} ${escapeHtml(source)}</span>
+                </div>
+            </div>
+        </div>
+        `;
+    }).join('');
+
+    container.innerHTML = `<div class="skill-candidates-list">${cards}</div>`;
 }
 
 /**
