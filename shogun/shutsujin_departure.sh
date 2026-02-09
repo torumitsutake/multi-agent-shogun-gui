@@ -595,6 +595,11 @@ if [ "$SETUP_ONLY" = false ]; then
 
     log_war "👑 全軍に Claude Code を召喚中..."
 
+    # 初期プロンプト（Session Start自動実行用）
+    # Claude Codeは起動時にCLAUDE.mdを読み込むが、手順を自動実行はしない。
+    # 起動コマンドの位置引数(prompt)で初期指示を渡し、Session Start手順を起動させる。
+    INIT_PROMPT='Execute the Session Start / Recovery procedure in CLAUDE.md'
+
     # 将軍: CLI Adapter経由でコマンド構築
     _shogun_cli_type="claude"
     _shogun_cmd="claude --model opus --dangerously-skip-permissions"
@@ -603,12 +608,18 @@ if [ "$SETUP_ONLY" = false ]; then
         _shogun_cmd=$(build_cli_command "shogun")
     fi
     tmux set-option -p -t "shogun:main" @agent_cli "$_shogun_cli_type"
+    # Claude CLIの場合、初期プロンプトを位置引数として付加
+    if [ "$_shogun_cli_type" = "claude" ]; then
+        _shogun_full_cmd="${_shogun_cmd} \"${INIT_PROMPT}\""
+    else
+        _shogun_full_cmd="${_shogun_cmd}"
+    fi
     if [ "$SHOGUN_NO_THINKING" = true ] && [ "$_shogun_cli_type" = "claude" ]; then
-        tmux send-keys -t shogun:main "MAX_THINKING_TOKENS=0 $_shogun_cmd"
+        tmux send-keys -t shogun:main "MAX_THINKING_TOKENS=0 $_shogun_full_cmd"
         tmux send-keys -t shogun:main Enter
         log_info "  └─ 将軍（${_shogun_cli_type} / thinking無効）、召喚完了"
     else
-        tmux send-keys -t shogun:main "$_shogun_cmd"
+        tmux send-keys -t shogun:main "$_shogun_full_cmd"
         tmux send-keys -t shogun:main Enter
         log_info "  └─ 将軍（${_shogun_cli_type}）、召喚完了"
     fi
@@ -625,7 +636,12 @@ if [ "$SETUP_ONLY" = false ]; then
         _karo_cmd=$(build_cli_command "karo")
     fi
     tmux set-option -p -t "multiagent:agents.${p}" @agent_cli "$_karo_cli_type"
-    tmux send-keys -t "multiagent:agents.${p}" "$_karo_cmd"
+    if [ "$_karo_cli_type" = "claude" ]; then
+        _karo_full_cmd="${_karo_cmd} \"${INIT_PROMPT}\""
+    else
+        _karo_full_cmd="${_karo_cmd}"
+    fi
+    tmux send-keys -t "multiagent:agents.${p}" "$_karo_full_cmd"
     tmux send-keys -t "multiagent:agents.${p}" Enter
     log_info "  └─ 家老（${_karo_cli_type}）、召喚完了"
 
@@ -645,7 +661,12 @@ if [ "$SETUP_ONLY" = false ]; then
                 fi
             fi
             tmux set-option -p -t "multiagent:agents.${p}" @agent_cli "$_ashi_cli_type"
-            tmux send-keys -t "multiagent:agents.${p}" "$_ashi_cmd"
+            if [ "$_ashi_cli_type" = "claude" ]; then
+                _ashi_full_cmd="${_ashi_cmd} \"${INIT_PROMPT}\""
+            else
+                _ashi_full_cmd="${_ashi_cmd}"
+            fi
+            tmux send-keys -t "multiagent:agents.${p}" "$_ashi_full_cmd"
             tmux send-keys -t "multiagent:agents.${p}" Enter
         done
         log_info "  └─ 足軽1-8（決戦の陣）、召喚完了"
@@ -664,7 +685,12 @@ if [ "$SETUP_ONLY" = false ]; then
                 _ashi_cmd=$(build_cli_command "ashigaru${i}")
             fi
             tmux set-option -p -t "multiagent:agents.${p}" @agent_cli "$_ashi_cli_type"
-            tmux send-keys -t "multiagent:agents.${p}" "$_ashi_cmd"
+            if [ "$_ashi_cli_type" = "claude" ]; then
+                _ashi_full_cmd="${_ashi_cmd} \"${INIT_PROMPT}\""
+            else
+                _ashi_full_cmd="${_ashi_cmd}"
+            fi
+            tmux send-keys -t "multiagent:agents.${p}" "$_ashi_full_cmd"
             tmux send-keys -t "multiagent:agents.${p}" Enter
         done
         log_info "  └─ 足軽1-8（平時の陣）、召喚完了"
@@ -798,9 +824,12 @@ NINJA_EOF
 
     log_success "  └─ 10エージェント分のinbox_watcher起動完了"
 
-    # STEP 6.7 は廃止 — CLAUDE.md Session Start (step 1: tmux agent_id) で各自が自律的に
-    # 自分のinstructions/*.mdを読み込む。検証済み (2026-02-08)。
-    log_info "📜 指示書読み込みは各エージェントが自律実行（CLAUDE.md Session Start）"
+    # STEP 6.7: Session Start自動実行
+    # 各エージェントの起動コマンドに初期プロンプト(INIT_PROMPT)を位置引数として付加済み。
+    # Claude Codeは起動時にCLAUDE.mdを読み込むが手順は自動実行しないため、
+    # 初期プロンプトで「Session Start / Recovery手順を実行せよ」と指示する。
+    # 非Claude CLIの場合はCLI固有の初期化メカニズムが必要（TODO: 個別対応）。
+    log_info "📜 Session Start初期プロンプト付きで全エージェント起動済み"
     echo ""
 fi
 
