@@ -74,20 +74,23 @@ def detect_pane_status(raw_output: str, cli_type: str = "claude") -> str:
     """ペイン出力からエージェントのステータスを判定する（Multi-CLI対応）
 
     判定ロジック（優先順位順）:
-    1. スピナー/thinking/busyキーワード検出 → "busy"
-    2. ❯プロンプト検出 → "idle"
-    3. ステータスバー検出（❯もスピナーもなし） → "busy"（thinking中と推定）
+    1. スピナー/thinking/busyキーワード検出（末尾5行） → "busy"
+    2. ❯プロンプト検出（キャプチャ全体） → "idle"
+    3. ステータスバー検出（❯もスピナーもなし） → "idle"（安全側に推定）
     4. 上記いずれもなし → "unknown"
     """
-    last_lines = raw_output.strip().split('\n')[-5:]
+    all_lines = raw_output.strip().split('\n')
+    last_lines = all_lines[-5:]
     last_text = '\n'.join(last_lines)
 
     indicators = CLI_STATUS_INDICATORS.get(cli_type, CLI_STATUS_INDICATORS["claude"])
 
+    # ❯プロンプトはキャプチャ全体から検索（表示範囲外に押し出される場合あり）
     has_prompt = any(
-        line.strip().startswith(p) for line in last_lines
+        line.strip().startswith(p) for line in all_lines
         for p in indicators["prompts"]
     )
+    # スピナー/thinking/busyは末尾5行のみ（古い出力での誤検出防止）
     has_spinner = any(s in last_text for s in indicators["spinners"])
     has_thinking = any(kw in last_text for kw in indicators["thinking_keywords"])
     has_busy = any(kw in last_text for kw in indicators["busy_keywords"])
@@ -104,7 +107,7 @@ def detect_pane_status(raw_output: str, cli_type: str = "claude") -> str:
     if has_prompt:
         return "idle"
     if has_status_bar:
-        return "busy"
+        return "idle"
     return "unknown"
 
 
