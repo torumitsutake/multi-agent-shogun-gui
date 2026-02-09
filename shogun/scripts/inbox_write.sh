@@ -39,47 +39,56 @@ while [ $attempt -lt $max_attempts ]; do
         flock -w 5 200 || exit 1
 
         # Add message via python3 (unified YAML handling)
-        python3 -c "
-import yaml, sys
+        # All variables passed as environment variables to prevent command injection
+        INBOX_PATH="$INBOX" \
+        MSG_ID="$MSG_ID" \
+        MSG_FROM="$FROM" \
+        MSG_TIMESTAMP="$TIMESTAMP" \
+        MSG_TYPE="$TYPE" \
+        MSG_CONTENT="$CONTENT" \
+        python3 -c '
+import yaml, sys, os
 
 try:
+    inbox_path = os.environ["INBOX_PATH"]
+
     # Load existing inbox
-    with open('$INBOX') as f:
+    with open(inbox_path) as f:
         data = yaml.safe_load(f)
 
     # Initialize if needed
     if not data:
         data = {}
-    if not data.get('messages'):
-        data['messages'] = []
+    if not data.get("messages"):
+        data["messages"] = []
 
     # Add new message
     new_msg = {
-        'id': '$MSG_ID',
-        'from': '$FROM',
-        'timestamp': '$TIMESTAMP',
-        'type': '$TYPE',
-        'content': '''$CONTENT''',
-        'read': False
+        "id": os.environ["MSG_ID"],
+        "from": os.environ["MSG_FROM"],
+        "timestamp": os.environ["MSG_TIMESTAMP"],
+        "type": os.environ["MSG_TYPE"],
+        "content": os.environ["MSG_CONTENT"],
+        "read": False
     }
-    data['messages'].append(new_msg)
+    data["messages"].append(new_msg)
 
     # Overflow protection: keep max 50 messages
-    if len(data['messages']) > 50:
-        msgs = data['messages']
-        unread = [m for m in msgs if not m.get('read', False)]
-        read = [m for m in msgs if m.get('read', False)]
+    if len(data["messages"]) > 50:
+        msgs = data["messages"]
+        unread = [m for m in msgs if not m.get("read", False)]
+        read = [m for m in msgs if m.get("read", False)]
         # Keep all unread + newest 30 read messages
-        data['messages'] = unread + read[-30:]
+        data["messages"] = unread + read[-30:]
 
     # Write back with consistent formatting (2-space indent)
-    with open('$INBOX', 'w') as f:
+    with open(inbox_path, "w") as f:
         yaml.dump(data, f, default_flow_style=False, allow_unicode=True, indent=2)
 
 except Exception as e:
-    print(f'ERROR: {e}', file=sys.stderr)
+    print(f"ERROR: {e}", file=sys.stderr)
     sys.exit(1)
-" || exit 1
+' || exit 1
 
     ) 200>"$LOCKFILE"; then
         # Success

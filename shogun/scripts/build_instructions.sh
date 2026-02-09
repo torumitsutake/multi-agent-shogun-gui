@@ -31,7 +31,7 @@ build_instruction_file() {
 
     # Extract YAML front matter from original file
     if [ -f "$original_file" ]; then
-        awk '/^---$/{if(++n==2) {print "---"; exit} if(n==1) next} n==1' "$original_file" > "$output_path"
+        awk '/^---$/{if(p++) {print; exit}; print; next} p{print}' "$original_file" > "$output_path"
         echo "" >> "$output_path"
     else
         # Minimal YAML front matter

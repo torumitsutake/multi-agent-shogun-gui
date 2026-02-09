@@ -1,0 +1,56 @@
+# Gitleaks configuration for multi-agent-shogun-gui
+# Detects sensitive API keys and tokens in the repository
+
+title = "Gitleaks configuration for multi-agent-shogun-gui"
+
+# Anthropic API Key detection
+[[rules]]
+description = "Anthropic API Key"
+id = "anthropic-api-key"
+regex = '''sk-ant-[a-zA-Z0-9_-]+'''
+tags = ["api-key", "anthropic"]
+
+# GitHub Personal Access Token (classic)
+[[rules]]
+description = "GitHub Personal Access Token"
+id = "github-pat"
+regex = '''ghp_[a-zA-Z0-9]{36}'''
+tags = ["api-key", "github", "pat"]
+
+# GitHub OAuth Access Token
+[[rules]]
+description = "GitHub OAuth Access Token"
+id = "github-oauth"
+regex = '''gho_[a-zA-Z0-9]{36}'''
+tags = ["api-key", "github", "oauth"]
+
+# GitHub App User Access Token
+[[rules]]
+description = "GitHub App User Access Token"
+id = "github-app-user"
+regex = '''ghu_[a-zA-Z0-9]{36}'''
+tags = ["api-key", "github", "app"]
+
+# GitHub App Server Access Token
+[[rules]]
+description = "GitHub App Server Access Token"
+id = "github-app-server"
+regex = '''ghs_[a-zA-Z0-9]{36}'''
+tags = ["api-key", "github", "app"]
+
+# Generic API Key pattern (high entropy strings)
+[[rules]]
+description = "Generic API Key"
+id = "generic-api-key"
+regex = '''(?i)(api[_-]?key|apikey|secret[_-]?key|access[_-]?token)["\']?\s*[:=]\s*["\']?([a-zA-Z0-9_\-]{32,})'''
+tags = ["api-key", "generic"]
+
+[allowlist]
+description = "Allowlist for false positives"
+regexes = [
+    '''(?i)(example|sample|test|dummy|placeholder)''',
+]
+paths = [
+    '''.*\.md$''',  # Markdown files often contain example keys
+    '''.*\.txt$''',  # Text files for documentation
+]

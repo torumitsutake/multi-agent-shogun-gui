@@ -45,37 +45,41 @@ if ! command -v inotifywait &>/dev/null; then
     exit 1
 fi
 
-# ─── Extract unread message info (lock-free read) ───
+# ─── Extract unread message info (with flock for write safety) ───
 # Returns JSON lines: {"count": N, "has_special": true/false, "specials": [...]}
 get_unread_info() {
-    python3 -c "
-import yaml, sys, json
+    (
+        flock -x -w 5 200 || { echo '{"count": 0, "specials": []}'; exit 0; }
+        INBOX_PATH="$INBOX" python3 -c '
+import yaml, sys, json, os
 try:
-    with open('$INBOX') as f:
+    inbox_path = os.environ["INBOX_PATH"]
+    with open(inbox_path) as f:
         data = yaml.safe_load(f)
-    if not data or 'messages' not in data or not data['messages']:
-        print(json.dumps({'count': 0, 'specials': []}))
+    if not data or "messages" not in data or not data["messages"]:
+        print(json.dumps({"count": 0, "specials": []}))
         sys.exit(0)
-    unread = [m for m in data['messages'] if not m.get('read', False)]
+    unread = [m for m in data["messages"] if not m.get("read", False)]
     # Special types that need direct send-keys (CLI commands, not conversation)
-    special_types = ('clear_command', 'model_switch')
-    specials = [m for m in unread if m.get('type') in special_types]
-    # Mark specials as read immediately (they'll be delivered directly)
+    special_types = ("clear_command", "model_switch")
+    specials = [m for m in unread if m.get("type") in special_types]
+    # Mark specials as read immediately (they will be delivered directly)
     if specials:
-        for m in data['messages']:
-            if not m.get('read', False) and m.get('type') in special_types:
-                m['read'] = True
-        with open('$INBOX', 'w') as f:
+        for m in data["messages"]:
+            if not m.get("read", False) and m.get("type") in special_types:
+                m["read"] = True
+        with open(inbox_path, "w") as f:
             yaml.dump(data, f, default_flow_style=False, allow_unicode=True)
     normal_count = len(unread) - len(specials)
     print(json.dumps({
-        'count': normal_count,
-        'specials': [{'type': m.get('type',''), 'content': m.get('content','')} for m in specials]
+        "count": normal_count,
+        "specials": [{"type": m.get("type",""), "content": m.get("content","")} for m in specials]
     }))
 except Exception as e:
-    print(json.dumps({'count': 0, 'specials': []}), file=sys.stderr)
-    print(json.dumps({'count': 0, 'specials': []}))
-" 2>/dev/null
+    print(json.dumps({"count": 0, "specials": []}), file=sys.stderr)
+    print(json.dumps({"count": 0, "specials": []}))
+' 2>/dev/null
+    ) 200>"$LOCKFILE"
 }
 
 # ─── Send CLI command directly via send-keys ───
