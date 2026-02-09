@@ -5,8 +5,8 @@ import subprocess
 from pathlib import Path
 
 import yaml
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from pydantic import BaseModel
 
 from parser import parse_dashboard
@@ -18,6 +18,33 @@ class CommandRequest(BaseModel):
 
 app = FastAPI(title="multi-agent-shogun-gui")
 
+
+@app.middleware("http")
+async def api_key_auth(request: Request, call_next):
+    """APIキー認証ミドルウェア
+
+    - GUI_API_KEY 環境変数未設定時: 認証スキップ（開発モード）
+    - localhost (127.0.0.1, ::1) からのアクセス: 認証スキップ
+    - リモートアクセス: X-API-Key ヘッダーまたは api_key クエリパラメータ必須
+    """
+    gui_api_key = os.environ.get("GUI_API_KEY", "")
+    if not gui_api_key:
+        return await call_next(request)
+
+    client_host = request.client.host if request.client else ""
+    if client_host in ("127.0.0.1", "::1"):
+        return await call_next(request)
+
+    api_key = request.headers.get("X-API-Key") or request.query_params.get("api_key")
+    if api_key != gui_api_key:
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "Invalid or missing API key. Set X-API-Key header or api_key query parameter."}
+        )
+
+    return await call_next(request)
+
+
 # サポートするCLI種別
 SUPPORTED_CLIS = {"claude", "codex", "copilot", "kimi"}
 
@@ -25,10 +52,10 @@ SUPPORTED_CLIS = {"claude", "codex", "copilot", "kimi"}
 CLI_STATUS_INDICATORS = {
     "claude": {
         "prompts": ["❯"],
-        "spinners": ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏', '✻', '⠂', '✳', '✶'],
+        "spinners": ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏', '✻', '⠂', '✳', '✶', '✽', '✢', '·'],
         "thinking_keywords": ['thinking', 'Thinking', 'Effecting',
                               'Boondoggling', 'Puzzling', 'Calculating', 'Fermenting', 'Crunching'],
-        "busy_keywords": ['esc to interrupt'],
+        "busy_keywords": ['esc to int'],
         "status_bar_keywords": ['bypass permissions', 'auto-approve', 'shift+tab to cycle'],
     },
     "codex": {
@@ -446,12 +473,15 @@ async def send_command(request: CommandRequest):
 
 @app.get("/static/{path:path}")
 async def static_files(path: str):
-    """静的ファイルを返す"""
+    """静的ファイルを返す（パストラバーサル防止付き）"""
     static_dir = Path(__file__).parent / "static"
-    file_path = static_dir / path
+    file_path = (static_dir / path).resolve()
+    # パストラバーサル防止: static_dir配下のファイルのみ許可
+    if not str(file_path).startswith(str(static_dir.resolve())):
+        raise HTTPException(status_code=403, detail="Access denied")
     if file_path.exists():
         return FileResponse(file_path)
-    return {"error": "File not found"}
+    raise HTTPException(status_code=404, detail="File not found")
 
 
 def main():
@@ -493,12 +523,20 @@ def main():
     print(f"Server: http://{args.host}:{args.port}")
 
     import uvicorn
-    uvicorn.run(
-        app,  # 文字列ではなくappオブジェクトを直接渡す
-        host=args.host,
-        port=args.port,
-        reload=args.reload,
-    )
+    if args.reload:
+        # reload時はimportパス文字列が必須（appオブジェクト直渡しでは動作しない）
+        uvicorn.run(
+            "app:app",
+            host=args.host,
+            port=args.port,
+            reload=True,
+        )
+    else:
+        uvicorn.run(
+            app,
+            host=args.host,
+            port=args.port,
+        )
 
 
 if __name__ == "__main__":
